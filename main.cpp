@@ -12,6 +12,7 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
 
 #include "debug.h"
 
@@ -20,6 +21,8 @@
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/quaternion.hpp"
+#include "glm/gtx/quaternion.hpp"
 
 #include <stdio.h>
 #include <sys/stat.h>
@@ -33,10 +36,13 @@
 
 struct Vertex
 {
-    glm::vec4   position;
-    glm::vec3   normal;
-    // glm::vec2   TexCoords;
+	glm::vec4   position;
+	glm::vec3   normal;
+	// glm::vec2   TexCoords;
 };
+
+SDL_Window*		InitWindow();
+void			InitGlew(SDL_Window * window);
 
 char		**ft_strsplit(char const *s, char c);
 int			ft_array_length(char const *s, char c);
@@ -45,44 +51,44 @@ void		free_strsplit(char **str);
 
 int screen_width=960, screen_height=540;
 
-GLFWwindow* InitWindow()
-{
-	if (!glfwInit())
-	{
-		fprintf(stderr, "Failed to initialize GLFW\n");
-		return (0);
-	}
+// GLFWwindow* InitWindow()
+// {
+// 	if (!glfwInit())
+// 	{
+// 		fprintf(stderr, "Failed to initialize GLFW\n");
+// 		return (0);
+// 	}
 
-	glfwWindowHint(GLFW_SAMPLES, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+// 	glfwWindowHint(GLFW_SAMPLES, 4);
+// 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+// 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+// 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
+// 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	// // Open a window and create its OpenGL context
-	GLFWwindow* window = glfwCreateWindow( 960, 540, "SCOP", NULL, NULL);
-	if (window == NULL)
-	{
-		fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
-		glfwTerminate();
-		return (0);
-	}
-	glfwMakeContextCurrent(window);
+// 	// // Open a window and create its OpenGL context
+// 	GLFWwindow* window = glfwCreateWindow( 960, 540, "SCOP", NULL, NULL);
+// 	if (window == NULL)
+// 	{
+// 		fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
+// 		glfwTerminate();
+// 		return (0);
+// 	}
+// 	glfwMakeContextCurrent(window);
 
-	// Initialize GLEW
-	if (glewInit() != GLEW_OK) {
-		fprintf(stderr, "Failed to initialize GLEW\n");
-		glfwTerminate();
-		return (0);
-	}
+// 	// Initialize GLEW
+// 	if (glewInit() != GLEW_OK) {
+// 		fprintf(stderr, "Failed to initialize GLEW\n");
+// 		glfwTerminate();
+// 		return (0);
+// 	}
 
-	// printf("Using GL Version: %s\n", glGetString(GL_VERSION));
+// 	// printf("Using GL Version: %s\n", glGetString(GL_VERSION));
 
-	// Ensure we can capture the escape key being pressed below
-	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+// 	// Ensure we can capture the escape key being pressed below
+// 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-	return (window);
-}
+// 	return (window);
+// }
 
 static void		print_shader_compilation_info(const char *source, GLuint shader)
 {
@@ -283,10 +289,116 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 	}
 }
 
+float delta_time = 0.0f;
+float lastFrame = 0.0f;
+
+void tick()
+{
+	float currentFrame = glfwGetTime();
+	delta_time = currentFrame - lastFrame;
+	lastFrame = currentFrame;
+}
+
+# include <stdint.h>
+
+
+uint64_t	start;
+uint64_t	current;
+uint64_t	current_time;
+uint64_t	numer;
+uint64_t	denom;
+float		ttime;
+float		old_time;
+
+#include <mach/mach_time.h>
+
+void		init_timer()
+{
+	mach_timebase_info_data_t coeff;
+
+	mach_timebase_info(&coeff);
+	numer = coeff.numer;
+	denom = coeff.denom;
+	current_time = 0;
+	start = mach_absolute_time();
+	current = start;
+	ttime = 0.0f;
+	old_time = 0.0f;
+}
+
+// float delta_time = 0.0f;
+
+// float		get_delta_time()
+// {
+// 	float delta_ttime;
+
+// 	current = mach_absolute_time() - start;
+// 	current_time = current * numer / denom;
+// 	ttime = (float)(current_time / 1000) / 1000000.0f;
+// 	delta_ttime = ttime - old_time;
+// 	old_time = ttime;
+// 	return (delta_ttime);
+// }
+
+int flags_w = 0;
+int flags_a = 0;
+int flags_s = 0;
+int flags_d = 0;
+int flags_q = 0;
+int flags_e = 0;
+
+glm::vec3 cameraPos(0.0f, 0.0f, 2.0f);
+glm::vec3 cameraDir(0.0f, 0.0f, 1.0f);
+glm::vec3 cameraRight(1.0f, 0.0f, 0.0f);
+glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
+
+bool* keyStates = new bool[256];
+
+void initKeys(bool *keyStates)
+{
+	for (int i = 0; i < 255; i++)
+		keyStates[i] = false;
+}
+
+void    key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (action == GLFW_PRESS)
+		keyStates[key] = true;
+	if (action == GLFW_RELEASE)
+		keyStates[key] = false;
+
+	float cameraSpeed = delta_time * 10.f;
+
+	if (keyStates[GLFW_KEY_W])
+		cameraPos = cameraPos - cameraDir * cameraSpeed;
+	if (keyStates[GLFW_KEY_S])
+		cameraPos = cameraPos + cameraDir * cameraSpeed;
+	if (keyStates[GLFW_KEY_A])
+		cameraPos = cameraPos - cameraRight * cameraSpeed;
+	if (keyStates[GLFW_KEY_D])
+		cameraPos = cameraPos + cameraRight * cameraSpeed;
+	if (keyStates[GLFW_KEY_Q])
+		cameraPos = cameraPos - cameraUp * cameraSpeed;
+	if (keyStates[GLFW_KEY_E])
+		cameraPos = cameraPos + cameraUp * cameraSpeed;
+	// std::cout << cameraPos.x << cameraPos.y << cameraPos.z << std::endl;
+}
+
+
 int main (void) {
-	GLFWwindow* window = InitWindow();
+	// GLFWwindow* window = InitWindow();
+	// if (!window)
+	// 	return (-1);
+
+	SDL_Window * window = InitWindow();
 	if (!window)
 		return (-1);
+	InitGlew(window);
+
+	init_timer();
+	tick();
+	// delta_time = get_delta_time();
+	initKeys(keyStates);
 
 	std::vector<Vertex> vertices;
 	std::vector<GLushort> elements;
@@ -294,6 +406,7 @@ int main (void) {
 	// load_obj("res/models/cube/cube.obj", vertices, elements);
 	// load_obj("res/models/tree/lowpolytree.obj", vertices, elements);
 	// load_obj("res/models/cat/12221_Cat_v1_l3.obj", vertices, elements);
+	// load_obj("res/models/plant/plant.obj", vertices, elements);
 	// load_obj("resources/42.obj", vertices, elements);
 	// load_obj("resources/teapot.obj", vertices, elements);
 	load_obj("resources/teapot2.obj", vertices, elements);
@@ -322,23 +435,10 @@ int main (void) {
 	GLCall( glEnableVertexAttribArray(1) );
 	GLCall( glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, normal) ));
 
-	const char* vertex_shader = "/Users/omiroshn/Desktop/newScop/res/shaders/vertex_shader.glsl";
-	const char* fragment_shader = "/Users/omiroshn/Desktop/newScop/res/shaders/fragment_shader.glsl";
+	const char* vertex_shader = "res/shaders/vertex_shader.glsl";
+	const char* fragment_shader = "res/shaders/fragment_shader.glsl";
 	unsigned int program;
 	program = read_shaders(vertex_shader, fragment_shader);
-	GLCall( glUseProgram(program) );
-
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
-	glm::mat4 view = glm::lookAt(glm::vec3(0.0, 2.0, 0.0), glm::vec3(0.0, 0.0, -4.0), glm::vec3(0.0, 1.0, 0.0));
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 10.0f);
-	glm::mat4 mvp = projection * view * model;
-
-	GLCall(int MVPLocation = glGetUniformLocation(program, "u_MVP"));
-	if (MVPLocation == -1) {
-		fprintf(stderr, "Could not bind uniform %s\n", "u_MVP");
-		return 0;
-	}
-	GLCall(glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, &mvp[0][0]));
 
 	// unsigned int textureID;
 	// int m_Width, m_Height, m_BPP;
@@ -364,24 +464,50 @@ int main (void) {
 	GLCall(glEnable(GL_DEPTH_TEST));
 	GLCall(glDepthFunc(GL_LESS));
 	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+	// glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
 	int size;
 	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 	std::cout << size << std::endl;
 
-	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0)
+	while (true)
 	{
 		GLCall( glClearColor(1.0, 1.0, 1.0, 1.0) );
 		GLCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
+
+		tick();
+		// delta_time = get_delta_time();
+
 		GLCall( glUseProgram(program) );
+
+		glm::vec3 direction = cameraPos + cameraDir;
+
+		float radius = 10.0f;
+		// std::cout << glfwGetTime() << std::endl;
+		// std::cout << getDeltaTime() << std::endl;
+		// float camX = sin(glfwGetTime()) * radius;
+		// float camZ = cos(glfwGetTime()) * radius;
+		// glm::mat4 view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), cameraUp);
+		glm::mat4 view = glm::lookAt(direction, cameraPos, cameraUp);
+		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
+		glm::mat4 mvp = projection * view * model;
+
+		GLCall(int MVPLocation = glGetUniformLocation(program, "u_MVP"));
+		if (MVPLocation == -1) {
+			fprintf(stderr, "Could not bind uniform %s\n", "u_MVP");
+			return 0;
+		}
+		GLCall(glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, &mvp[0][0]));
 
 		GLCall( glBindVertexArray(va) );
 		GLCall( glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, NULL) );
 
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		// glfwSwapBuffers(window);
+		SDL_GL_SwapWindow(window);
 	}
-	glfwTerminate();
+	SDL_DestroyWindow(window);
+	SDL_Quit();
 	return (0);
 }
