@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include <SDL2/SDL.h>
 
 #include "debug.h"
@@ -41,6 +40,8 @@ struct Vertex
 	// glm::vec2   TexCoords;
 };
 
+int programIsRunning = 1;
+
 SDL_Window*		InitWindow();
 void			InitGlew(SDL_Window * window);
 
@@ -50,45 +51,6 @@ char		*ft_strtrim(char const *s);
 void		free_strsplit(char **str);
 
 int screen_width=960, screen_height=540;
-
-// GLFWwindow* InitWindow()
-// {
-// 	if (!glfwInit())
-// 	{
-// 		fprintf(stderr, "Failed to initialize GLFW\n");
-// 		return (0);
-// 	}
-
-// 	glfwWindowHint(GLFW_SAMPLES, 4);
-// 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-// 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-// 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
-// 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-// 	// // Open a window and create its OpenGL context
-// 	GLFWwindow* window = glfwCreateWindow( 960, 540, "SCOP", NULL, NULL);
-// 	if (window == NULL)
-// 	{
-// 		fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
-// 		glfwTerminate();
-// 		return (0);
-// 	}
-// 	glfwMakeContextCurrent(window);
-
-// 	// Initialize GLEW
-// 	if (glewInit() != GLEW_OK) {
-// 		fprintf(stderr, "Failed to initialize GLEW\n");
-// 		glfwTerminate();
-// 		return (0);
-// 	}
-
-// 	// printf("Using GL Version: %s\n", glGetString(GL_VERSION));
-
-// 	// Ensure we can capture the escape key being pressed below
-// 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-
-// 	return (window);
-// }
 
 static void		print_shader_compilation_info(const char *source, GLuint shader)
 {
@@ -289,18 +251,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 	}
 }
 
-float delta_time = 0.0f;
-float lastFrame = 0.0f;
-
-void tick()
-{
-	float currentFrame = glfwGetTime();
-	delta_time = currentFrame - lastFrame;
-	lastFrame = currentFrame;
-}
-
 # include <stdint.h>
-
 
 uint64_t	start;
 uint64_t	current;
@@ -326,19 +277,18 @@ void		init_timer()
 	old_time = 0.0f;
 }
 
-// float delta_time = 0.0f;
+float delta_time = 0.0f;
 
-// float		get_delta_time()
-// {
-// 	float delta_ttime;
+void		tick()
+{
+	float delta_ttime;
 
-// 	current = mach_absolute_time() - start;
-// 	current_time = current * numer / denom;
-// 	ttime = (float)(current_time / 1000) / 1000000.0f;
-// 	delta_ttime = ttime - old_time;
-// 	old_time = ttime;
-// 	return (delta_ttime);
-// }
+	current = mach_absolute_time() - start;
+	current_time = current * numer / denom;
+	ttime = (float)(current_time / 1000) / 1000000.0f;
+	delta_time = ttime - old_time;
+	old_time = ttime;
+}
 
 int flags_w = 0;
 int flags_a = 0;
@@ -360,35 +310,84 @@ void initKeys(bool *keyStates)
 		keyStates[i] = false;
 }
 
-void    key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void handle_events()
 {
-	if (action == GLFW_PRESS)
-		keyStates[key] = true;
-	if (action == GLFW_RELEASE)
-		keyStates[key] = false;
+	SDL_Event    e;
+	
+	while (SDL_PollEvent(&e))
+	{
+		if (e.type == SDL_QUIT || (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_ESCAPE))
+			programIsRunning = 0;
+		else if (e.type == SDL_KEYDOWN)
+			keyStates[e.key.keysym.scancode] = true;
+		else if (e.type == SDL_KEYUP)
+			keyStates[e.key.keysym.scancode] = false;
+		else if (e.type == SDL_MOUSEMOTION)
+		{
+			// if (e.motion.xrel > 0) {
+			//     t_quaternion q = init_quat_deg(doom->camera.up, e.motion.xrel);
+			//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
+			//     doom->camera.right = vec3_cross(doom->camera.dir, doom->camera.up);
+			// } else {
+			//     t_quaternion q = init_quat_deg(doom->camera.up, e.motion.xrel);
+			//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
+			//     doom->camera.right = vec3_cross(doom->camera.dir, doom->camera.up);
+			// }
+			
+			// if (e.motion.yrel > 0) {
+			//     t_quaternion q = init_quat_deg(doom->camera.right, -e.motion.yrel);
+			//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
+			//     doom->camera.up = vec3_cross(doom->camera.right, doom->camera.dir);
+			// } else {
+			//     t_quaternion q = init_quat_deg(doom->camera.right, abs(e.motion.yrel));
+			//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
+			//     doom->camera.up = vec3_cross(doom->camera.right, doom->camera.dir);
+			// }
+		}
+	}
 
-	float cameraSpeed = delta_time * 10.f;
+	float cameraSpeed = delta_time * 5.f;
 
-	if (keyStates[GLFW_KEY_W])
+	if (keyStates[SDL_SCANCODE_W])
 		cameraPos = cameraPos - cameraDir * cameraSpeed;
-	if (keyStates[GLFW_KEY_S])
+	if (keyStates[SDL_SCANCODE_S])
 		cameraPos = cameraPos + cameraDir * cameraSpeed;
-	if (keyStates[GLFW_KEY_A])
+	if (keyStates[SDL_SCANCODE_A])
 		cameraPos = cameraPos - cameraRight * cameraSpeed;
-	if (keyStates[GLFW_KEY_D])
+	if (keyStates[SDL_SCANCODE_D])
 		cameraPos = cameraPos + cameraRight * cameraSpeed;
-	if (keyStates[GLFW_KEY_Q])
+	if (keyStates[SDL_SCANCODE_Q])
 		cameraPos = cameraPos - cameraUp * cameraSpeed;
-	if (keyStates[GLFW_KEY_E])
+	if (keyStates[SDL_SCANCODE_E])
 		cameraPos = cameraPos + cameraUp * cameraSpeed;
-	// std::cout << cameraPos.x << cameraPos.y << cameraPos.z << std::endl;
+
+	// else if (e.key.keysym.scancode == SDL_SCANCODE_LEFT)
+	// {
+	//     t_quaternion q = init_quat_deg(doom->camera.up, -180 * doom->timer.time);
+	//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
+	//     doom->camera.right = vec3_cross(doom->camera.dir, doom->camera.up);
+	// }
+	// else if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT)
+	// {
+	//     t_quaternion q = init_quat_deg(doom->camera.up, 180 * doom->timer.time);
+	//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
+	//     doom->camera.right = vec3_cross(doom->camera.dir, doom->camera.up);
+	// }
+	// else if (e.key.keysym.scancode == SDL_SCANCODE_UP)
+	// {
+	//     t_quaternion q = init_quat_deg(doom->camera.right, 180 * doom->timer.time);
+	//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
+	//     doom->camera.up = vec3_cross(doom->camera.right, doom->camera.dir);
+	// }
+	// else if (e.key.keysym.scancode == SDL_SCANCODE_DOWN)
+	// {
+	//     t_quaternion q = init_quat_deg(doom->camera.right, -180 * doom->timer.time);
+	//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
+	//     doom->camera.up = vec3_cross(doom->camera.right, doom->camera.dir);
+	// }
 }
 
-
 int main (void) {
-	// GLFWwindow* window = InitWindow();
-	// if (!window)
-	// 	return (-1);
 
 	SDL_Window * window = InitWindow();
 	if (!window)
@@ -464,19 +463,19 @@ int main (void) {
 	GLCall(glEnable(GL_DEPTH_TEST));
 	GLCall(glDepthFunc(GL_LESS));
 	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-	// glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
 	int size;
 	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 	std::cout << size << std::endl;
 
-	while (true)
+	while (programIsRunning)
 	{
 		GLCall( glClearColor(1.0, 1.0, 1.0, 1.0) );
 		GLCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
 
 		tick();
+		handle_events();
 		// delta_time = get_delta_time();
 
 		GLCall( glUseProgram(program) );
@@ -484,10 +483,6 @@ int main (void) {
 		glm::vec3 direction = cameraPos + cameraDir;
 
 		float radius = 10.0f;
-		// std::cout << glfwGetTime() << std::endl;
-		// std::cout << getDeltaTime() << std::endl;
-		// float camX = sin(glfwGetTime()) * radius;
-		// float camZ = cos(glfwGetTime()) * radius;
 		// glm::mat4 view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), cameraUp);
 		glm::mat4 view = glm::lookAt(direction, cameraPos, cameraUp);
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
@@ -504,7 +499,6 @@ int main (void) {
 		GLCall( glBindVertexArray(va) );
 		GLCall( glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, NULL) );
 
-		// glfwSwapBuffers(window);
 		SDL_GL_SwapWindow(window);
 	}
 	SDL_DestroyWindow(window);
