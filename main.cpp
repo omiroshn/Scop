@@ -31,6 +31,9 @@
 #include <sstream>
 #include <vector>
 
+#define degreesToRadians(angleDegrees) ((angleDegrees) * M_PI / 180.0)
+#define radiansToDegrees(angleRadians) ((angleRadians) * 180.0 / M_PI)
+
 #define get_offset(type, member) ((size_t)(&((type*)(1))->member)-1)
 
 struct Vertex
@@ -297,10 +300,14 @@ int flags_d = 0;
 int flags_q = 0;
 int flags_e = 0;
 
+bool mRightButtonPressed = false;
+
 glm::vec3 cameraPos(0.0f, 0.0f, 2.0f);
 glm::vec3 cameraDir(0.0f, 0.0f, 1.0f);
 glm::vec3 cameraRight(1.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
+glm::vec3 mWorldUp(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
 
 bool* keyStates = new bool[256];
 
@@ -309,6 +316,26 @@ void initKeys(bool *keyStates)
 	for (int i = 0; i < 255; i++)
 		keyStates[i] = false;
 }
+
+float prevMousePosX = 0.0f, prevMousePosY = 0.0f;
+float mouseOffsetX = 0.0f, mouseOffsetY = 0.0f;
+
+void processMouseMotion(SDL_Event e)
+{
+	mouseOffsetX = e.motion.x - prevMousePosX;
+    mouseOffsetY = prevMousePosY - e.motion.y;
+
+    prevMousePosX = e.motion.x;
+    prevMousePosY = e.motion.y;
+    std::cout << e.motion.x << std::endl;
+  //   if (e.motion.xrel == 0)
+		// mouseOffsetX = 0.0f;
+  //   if (e.motion.yrel == 0)
+  //   	mouseOffsetY = 0.0f;
+}
+
+float yaw   = -90.0f;	// yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+float pitch =  0.0f;
 
 void handle_events()
 {
@@ -324,48 +351,42 @@ void handle_events()
 			keyStates[e.key.keysym.scancode] = false;
 		else if (e.type == SDL_MOUSEMOTION)
 		{
-			// if (e.motion.xrel > 0) {
-			//     t_quaternion q = init_quat_deg(doom->camera.up, e.motion.xrel);
-			//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
-			//     doom->camera.right = vec3_cross(doom->camera.dir, doom->camera.up);
-			// } else {
-			//     t_quaternion q = init_quat_deg(doom->camera.up, e.motion.xrel);
-			//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
-			//     doom->camera.right = vec3_cross(doom->camera.dir, doom->camera.up);
-			// }
-			
-			// if (e.motion.yrel > 0) {
-			//     t_quaternion q = init_quat_deg(doom->camera.right, -e.motion.yrel);
-			//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
-			//     doom->camera.up = vec3_cross(doom->camera.right, doom->camera.dir);
-			// } else {
-			//     t_quaternion q = init_quat_deg(doom->camera.right, abs(e.motion.yrel));
-			//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
-			//     doom->camera.up = vec3_cross(doom->camera.right, doom->camera.dir);
-			// }
+			yaw += e.motion.xrel;
+			pitch += e.motion.yrel;
 		}
 	}
 
 	float cameraSpeed = delta_time * 5.f;
 
 	if (keyStates[SDL_SCANCODE_W])
-		cameraPos = cameraPos - cameraDir * cameraSpeed;
+		cameraPos += cameraDir * cameraSpeed;
 	if (keyStates[SDL_SCANCODE_S])
-		cameraPos = cameraPos + cameraDir * cameraSpeed;
+		cameraPos -= cameraDir * cameraSpeed;
 	if (keyStates[SDL_SCANCODE_A])
-		cameraPos = cameraPos - cameraRight * cameraSpeed;
+		cameraPos -= cameraRight * cameraSpeed;
 	if (keyStates[SDL_SCANCODE_D])
-		cameraPos = cameraPos + cameraRight * cameraSpeed;
+		cameraPos += cameraRight * cameraSpeed;
 	if (keyStates[SDL_SCANCODE_Q])
-		cameraPos = cameraPos - cameraUp * cameraSpeed;
+		cameraPos -= cameraUp * cameraSpeed;
 	if (keyStates[SDL_SCANCODE_E])
-		cameraPos = cameraPos + cameraUp * cameraSpeed;
+		cameraPos += cameraUp * cameraSpeed;
+
+	// yaw   += mouseOffsetX;
+	// pitch += mouseOffsetY;
+
+	glm::vec3 front;
+    front.x = cos(degreesToRadians(yaw)) * cos(degreesToRadians(-pitch));
+    front.y = sin(degreesToRadians(-pitch));
+    front.z = sin(degreesToRadians(yaw)) * cos(degreesToRadians(-pitch));
+    cameraDir = glm::normalize(front);
+    cameraRight = glm::normalize(glm::cross(cameraDir, mWorldUp));
+    cameraUp = glm::normalize(glm::cross(cameraRight, cameraDir));
 
 	// else if (e.key.keysym.scancode == SDL_SCANCODE_LEFT)
 	// {
-	//     t_quaternion q = init_quat_deg(doom->camera.up, -180 * doom->timer.time);
-	//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
-	//     doom->camera.right = vec3_cross(doom->camera.dir, doom->camera.up);
+	    // t_quaternion q = init_quat_deg(doom->camera.up, -180 * doom->timer.time);
+	    // doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
+	    // doom->camera.right = vec3_cross(doom->camera.dir, doom->camera.up);
 	// }
 	// else if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT)
 	// {
@@ -480,11 +501,11 @@ int main (void) {
 
 		GLCall( glUseProgram(program) );
 
-		glm::vec3 direction = cameraPos + cameraDir;
+		// glm::vec3 direction = cameraPos + cameraDir;
 
 		float radius = 10.0f;
 		// glm::mat4 view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), cameraUp);
-		glm::mat4 view = glm::lookAt(direction, cameraPos, cameraUp);
+		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
 		glm::mat4 mvp = projection * view * model;
