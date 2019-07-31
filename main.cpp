@@ -89,9 +89,9 @@ static void		print_link_info(GLuint program)
 	GLsizei	size;
 	GLchar	log[4096];
 
-	printf("Link stage failed.");
+	printf("Shaders: Link stage failed.");
 	glGetProgramInfoLog(program, 4096, &size, log);
-	printf("Program link log:\n %s\n", log);
+	printf("Shaders: Program link log:\n %s\n", log);
 }
 
 GLuint			create_program(const char *vert, const char *frag)
@@ -142,20 +142,25 @@ int   read_shaders(const char *vertex_path, const char *fragment_path)
 	
 	vertex_str = (char*)malloc(v_size);
 	if (read(vertex_fd, vertex_str, v_size) < 0) {
-		perror("Error in reading:");
-		return (false);
+		perror("Shaders: Error in reading:");
+		return (0);
 	}
 	vertex_str[v_size] = '\0';
 	
 	fragment_str = (char*)malloc(f_size);
 	if (read(fragment_fd, fragment_str, f_size) < 0) {
-		perror("Error in reading:");
-		return (false);
+		perror("Shaders: Error in reading:");
+		return (0);
 	}
 	fragment_str[f_size] = '\0';
 	
 	int program;
 	program = create_program(vertex_str, fragment_str);
+	if (!program)
+	{
+		printf("Failed to read shaders\n");
+		return (0);
+	}
 	free(vertex_str);
 	free(fragment_str);
 	return (program);
@@ -293,13 +298,6 @@ void		tick()
 	old_time = ttime;
 }
 
-int flags_w = 0;
-int flags_a = 0;
-int flags_s = 0;
-int flags_d = 0;
-int flags_q = 0;
-int flags_e = 0;
-
 bool mRightButtonPressed = false;
 
 glm::vec3 cameraPos(0.0f, 0.0f, 2.0f);
@@ -317,24 +315,7 @@ void initKeys(bool *keyStates)
 		keyStates[i] = false;
 }
 
-float prevMousePosX = 0.0f, prevMousePosY = 0.0f;
-float mouseOffsetX = 0.0f, mouseOffsetY = 0.0f;
-
-void processMouseMotion(SDL_Event e)
-{
-	mouseOffsetX = e.motion.x - prevMousePosX;
-    mouseOffsetY = prevMousePosY - e.motion.y;
-
-    prevMousePosX = e.motion.x;
-    prevMousePosY = e.motion.y;
-    std::cout << e.motion.x << std::endl;
-  //   if (e.motion.xrel == 0)
-		// mouseOffsetX = 0.0f;
-  //   if (e.motion.yrel == 0)
-  //   	mouseOffsetY = 0.0f;
-}
-
-float yaw   = -90.0f;	// yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
+float yaw   = 0.0f;
 float pitch =  0.0f;
 
 void handle_events()
@@ -371,41 +352,53 @@ void handle_events()
 	if (keyStates[SDL_SCANCODE_E])
 		cameraPos += cameraUp * cameraSpeed;
 
-	// yaw   += mouseOffsetX;
-	// pitch += mouseOffsetY;
+    if (keyStates[SDL_SCANCODE_LEFT])
+		yaw -= 1.f;
+	if (keyStates[SDL_SCANCODE_RIGHT])
+		yaw += 1.f;
+	if (keyStates[SDL_SCANCODE_UP])
+		pitch -= 1.f;
+	if (keyStates[SDL_SCANCODE_DOWN])
+		pitch += 1.f;
 
 	glm::vec3 front;
-    front.x = cos(degreesToRadians(yaw)) * cos(degreesToRadians(-pitch));
+	std::cout << "yaw " << cos(ceil(degreesToRadians(yaw))) << " " << ceil(degreesToRadians(yaw)) << " " << degreesToRadians(yaw) << " " << yaw << std::endl;
+    front.x = sin(degreesToRadians(yaw)) * cos(degreesToRadians(-pitch));
     front.y = sin(degreesToRadians(-pitch));
-    front.z = sin(degreesToRadians(yaw)) * cos(degreesToRadians(-pitch));
-    cameraDir = glm::normalize(front);
+    front.z = -cos(degreesToRadians(yaw)) * cos(degreesToRadians(-pitch));
+
+    // std::cout << "front " << front.x << " " << front.y << " " << front.z << std::endl;
+	cameraDir = glm::normalize(front);
     cameraRight = glm::normalize(glm::cross(cameraDir, mWorldUp));
     cameraUp = glm::normalize(glm::cross(cameraRight, cameraDir));
+	// std::cout << "cameraDir " << cameraDir.x << " " << cameraDir.y << " " << cameraDir.z << std::endl;
+	// std::cout << "cameraRight " << cameraRight.x << " " << cameraRight.y << " " << cameraRight.z << std::endl;
+	// std::cout << "cameraUp " << cameraUp.x << " " << cameraUp.y << " " << cameraUp.z << std::endl;
+}
 
-	// else if (e.key.keysym.scancode == SDL_SCANCODE_LEFT)
-	// {
-	    // t_quaternion q = init_quat_deg(doom->camera.up, -180 * doom->timer.time);
-	    // doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
-	    // doom->camera.right = vec3_cross(doom->camera.dir, doom->camera.up);
-	// }
-	// else if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT)
-	// {
-	//     t_quaternion q = init_quat_deg(doom->camera.up, 180 * doom->timer.time);
-	//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
-	//     doom->camera.right = vec3_cross(doom->camera.dir, doom->camera.up);
-	// }
-	// else if (e.key.keysym.scancode == SDL_SCANCODE_UP)
-	// {
-	//     t_quaternion q = init_quat_deg(doom->camera.right, 180 * doom->timer.time);
-	//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
-	//     doom->camera.up = vec3_cross(doom->camera.right, doom->camera.dir);
-	// }
-	// else if (e.key.keysym.scancode == SDL_SCANCODE_DOWN)
-	// {
-	//     t_quaternion q = init_quat_deg(doom->camera.right, -180 * doom->timer.time);
-	//     doom->camera.dir = vec3_normalize(quat_transform_vec3(q, doom->camera.dir));
-	//     doom->camera.up = vec3_cross(doom->camera.right, doom->camera.dir);
-	// }
+glm::mat4 lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 upDir)
+{
+	glm::vec3 forward = glm::normalize(eye - target);
+    glm::vec3 left = glm::normalize(glm::cross(upDir ,forward));
+    glm::vec3 up = glm::normalize(glm::cross(forward, left));
+
+    glm::mat4 matrix(1.0);
+
+    matrix[0][0] = left.x;
+    matrix[1][0] = left.y;
+    matrix[2][0] = left.z;
+    matrix[0][1] = up.x;
+    matrix[1][1] = up.y;
+    matrix[2][1] = up.z;
+    matrix[0][2] = forward.x;
+    matrix[1][2] = forward.y;
+    matrix[2][2] = forward.z;
+
+    matrix[3][0] = -left.x * eye.x - left.y * eye.y - left.z * eye.z;
+    matrix[3][1] = -up.x * eye.x - up.y * eye.y - up.z * eye.z;
+    matrix[3][2] = -forward.x * eye.x - forward.y * eye.y - forward.z * eye.z;
+
+    return (matrix);
 }
 
 int main (void) {
@@ -459,6 +452,11 @@ int main (void) {
 	const char* fragment_shader = "res/shaders/fragment_shader.glsl";
 	unsigned int program;
 	program = read_shaders(vertex_shader, fragment_shader);
+	if (!program)
+	{
+		printf("Failed to read shaders\n");
+		return (0);
+	}
 
 	// unsigned int textureID;
 	// int m_Width, m_Height, m_BPP;
@@ -487,38 +485,34 @@ int main (void) {
 
 	int size;
 	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-	std::cout << size << std::endl;
+	std::cout << "Vertices loaded: " << size << std::endl;
 
 	while (programIsRunning)
 	{
-		GLCall( glClearColor(1.0, 1.0, 1.0, 1.0) );
-		GLCall( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
-
+		GLCall(glClearColor(1.0, 1.0, 1.0, 1.0));
+		GLCall(glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		tick();
 		handle_events();
 		// delta_time = get_delta_time();
 
-		GLCall( glUseProgram(program) );
+		GLCall(glUseProgram(program));
 
-		// glm::vec3 direction = cameraPos + cameraDir;
-
-		float radius = 10.0f;
-		// glm::mat4 view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), cameraUp);
-		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
+		glm::mat4 view = lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
 		glm::mat4 mvp = projection * view * model;
 
 		GLCall(int MVPLocation = glGetUniformLocation(program, "u_MVP"));
-		if (MVPLocation == -1) {
+		if (MVPLocation == -1)
+		{
 			fprintf(stderr, "Could not bind uniform %s\n", "u_MVP");
 			return 0;
 		}
 		GLCall(glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, &mvp[0][0]));
 
-		GLCall( glBindVertexArray(va) );
-		GLCall( glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, NULL) );
+		GLCall(glBindVertexArray(va));
+		GLCall(glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, NULL));
 
 		SDL_GL_SwapWindow(window);
 	}
