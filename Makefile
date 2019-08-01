@@ -1,6 +1,6 @@
 NAME = scop
 
-FILES = main init ft_strsplit
+FILES = main init ft_strsplit math
 SRC = $(addsuffix .cpp, $(FILES))
 OBJECTS = $(addsuffix .o, $(FILES))
 
@@ -12,13 +12,16 @@ INCLUDES = -I /Users/omiroshn/.brew/Cellar/glew/2.1.0/include \
 LIBS = -L /Users/omiroshn/.brew/Cellar/glew/2.1.0/lib \
 	-L /Users/omiroshn/.brew/Cellar/sdl2/2.0.9_1/lib
 
+MATH_HEADERS = -I vendor/ft_math/include
+MATH_LIB = ./vendor/ft_math/lib/ft_math.a
+
 FRAMEWORKS = -lglew -framework OpenGL -lsdl2
 
 all: $(OBJECTS)
-	clang++ $(OBJECTS) $(LIBS) $(FRAMEWORKS) -o $(NAME) 
+	clang++ $(MATH_HEADERS) $(OBJECTS) $(LIBS) $(FRAMEWORKS) -o $(NAME) 
 
 ./%.o: ./%.cpp
-	clang++ $(INCLUDES) -o $@ -c $^ -g
+	clang++ $(INCLUDES) $(MATH_HEADERS) -o $@ -c $^ -g
 
 clean:
 	rm -rf $(OBJECTS)

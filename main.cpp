@@ -22,6 +22,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/quaternion.hpp"
+#include <glm/gtx/euler_angles.hpp>
 
 #include <stdio.h>
 #include <sys/stat.h>
@@ -30,6 +31,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+
+#include "ft_math.h"
 
 #define degreesToRadians(angleDegrees) ((angleDegrees) * M_PI / 180.0)
 #define radiansToDegrees(angleRadians) ((angleRadians) * 180.0 / M_PI)
@@ -301,10 +304,11 @@ void		tick()
 bool mRightButtonPressed = false;
 
 glm::vec3 cameraPos(0.0f, 0.0f, 2.0f);
-glm::vec3 cameraDir(0.0f, 0.0f, 1.0f);
+glm::vec3 cameraDir(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraRight(1.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
 glm::vec3 mWorldUp(0.0f, 1.0f, 0.0f);
+glm::vec3 mWorldRight(1.0f, 0.0f, 0.0f);
 glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
 
 bool* keyStates = new bool[256];
@@ -317,6 +321,11 @@ void initKeys(bool *keyStates)
 
 float yaw   = 0.0f;
 float pitch =  0.0f;
+
+void print_vec(glm::vec3 vec)
+{
+	std::cout << "x: " << vec.x << "y: " << vec.y << "z: " << vec.z << std::endl;
+}
 
 void handle_events()
 {
@@ -332,8 +341,33 @@ void handle_events()
 			keyStates[e.key.keysym.scancode] = false;
 		else if (e.type == SDL_MOUSEMOTION)
 		{
-			yaw += e.motion.xrel;
-			pitch += e.motion.yrel;
+			{
+				t_vec3 up = vec3_init(mWorldUp.x, mWorldUp.y, mWorldUp.z);
+				t_quaternion q = init_quat_deg(up, -e.motion.xrel);
+				t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+				dir = vec3_normalize(quat_transform_vec3(q, dir));
+				t_vec3 right = vec3_cross(dir, up);
+				cameraDir.x = dir.x;
+				cameraDir.y = dir.y;
+				cameraDir.z = dir.z;
+				cameraRight.x = right.x;
+				cameraRight.y = right.y;
+				cameraRight.z = right.z;
+			}
+
+			{
+				t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
+				t_quaternion q = init_quat_deg(right, -e.motion.yrel);
+				t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+				dir = vec3_normalize(quat_transform_vec3(q, dir));
+				t_vec3 up = vec3_cross(right, dir);
+				cameraDir.x = dir.x;
+				cameraDir.y = dir.y;
+				cameraDir.z = dir.z;
+				cameraUp.x = up.x;
+				cameraUp.y = up.y;
+				cameraUp.z = up.z;
+			}
 		}
 	}
 
@@ -352,54 +386,134 @@ void handle_events()
 	if (keyStates[SDL_SCANCODE_E])
 		cameraPos += cameraUp * cameraSpeed;
 
-    if (keyStates[SDL_SCANCODE_LEFT])
-		yaw -= 1.f;
+	if (keyStates[SDL_SCANCODE_LEFT])
+	{
+		t_vec3 up = vec3_init(cameraUp.x, cameraUp.y, cameraUp.z);
+		t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+		t_quaternion q = init_quat_deg(up, 180 * delta_time);
+		dir = vec3_normalize(quat_transform_vec3(q, dir));
+		t_vec3 right = vec3_cross(dir, up);
+		cameraDir.x = dir.x;
+		cameraDir.y = dir.y;
+		cameraDir.z = dir.z;
+		cameraRight.x = right.x;
+		cameraRight.y = right.y;
+		cameraRight.z = right.z;
+	}
 	if (keyStates[SDL_SCANCODE_RIGHT])
-		yaw += 1.f;
+	{
+		t_vec3 up = vec3_init(cameraUp.x, cameraUp.y, cameraUp.z);
+		t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+		t_quaternion q = init_quat_deg(up, -180 * delta_time);
+		dir = vec3_normalize(quat_transform_vec3(q, dir));
+		t_vec3 right = vec3_cross(dir, up);
+		cameraDir.x = dir.x;
+		cameraDir.y = dir.y;
+		cameraDir.z = dir.z;
+		cameraRight.x = right.x;
+		cameraRight.y = right.y;
+		cameraRight.z = right.z;
+	}
 	if (keyStates[SDL_SCANCODE_UP])
-		pitch -= 1.f;
+	{
+		t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
+		t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+		t_quaternion q = init_quat_deg(right, 180 * delta_time);
+		dir = vec3_normalize(quat_transform_vec3(q, dir));
+		t_vec3 up = vec3_cross(right, dir);
+		cameraDir.x = dir.x;
+		cameraDir.y = dir.y;
+		cameraDir.z = dir.z;
+		cameraUp.x = up.x;
+		cameraUp.y = up.y;
+		cameraUp.z = up.z;
+	}
 	if (keyStates[SDL_SCANCODE_DOWN])
-		pitch += 1.f;
+	{
+		t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
+		t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+		t_quaternion q = init_quat_deg(right, -180 * delta_time);
+		dir = vec3_normalize(quat_transform_vec3(q, dir));
+		t_vec3 up = vec3_cross(right, dir);
+		cameraDir.x = dir.x;
+		cameraDir.y = dir.y;
+		cameraDir.z = dir.z;
+		cameraUp.x = up.x;
+		cameraUp.y = up.y;
+		cameraUp.z = up.z;
+	}
 
-	glm::vec3 front;
-	std::cout << "yaw " << cos(ceil(degreesToRadians(yaw))) << " " << ceil(degreesToRadians(yaw)) << " " << degreesToRadians(yaw) << " " << yaw << std::endl;
-    front.x = sin(degreesToRadians(yaw)) * cos(degreesToRadians(-pitch));
-    front.y = sin(degreesToRadians(-pitch));
-    front.z = -cos(degreesToRadians(yaw)) * cos(degreesToRadians(-pitch));
+	// print_vec(cameraUp);
 
-    // std::cout << "front " << front.x << " " << front.y << " " << front.z << std::endl;
-	cameraDir = glm::normalize(front);
-    cameraRight = glm::normalize(glm::cross(cameraDir, mWorldUp));
-    cameraUp = glm::normalize(glm::cross(cameraRight, cameraDir));
-	// std::cout << "cameraDir " << cameraDir.x << " " << cameraDir.y << " " << cameraDir.z << std::endl;
-	// std::cout << "cameraRight " << cameraRight.x << " " << cameraRight.y << " " << cameraRight.z << std::endl;
-	// std::cout << "cameraUp " << cameraUp.x << " " << cameraUp.y << " " << cameraUp.z << std::endl;
+ //    if (keyStates[SDL_SCANCODE_LEFT])
+	// 	yaw -= 1.f;
+	// if (keyStates[SDL_SCANCODE_RIGHT])
+	// 	yaw += 1.f;
+	// if (keyStates[SDL_SCANCODE_UP])
+	// 	pitch -= 1.f;
+	// if (keyStates[SDL_SCANCODE_DOWN])
+	// 	pitch += 1.f;
+
+		// glm::vec3 front;
+		// // std::cout << "yaw " << cos(ceil(degreesToRadians(yaw))) << " " << ceil(degreesToRadians(yaw)) << " " << degreesToRadians(yaw) << " " << yaw << std::endl;
+	 //    front.x = sin(glm::radians(yaw)) * cos(glm::radians(-pitch));
+	 //    front.y = sin(glm::radians(-pitch));
+	 //    front.z = -cos(glm::radians(yaw)) * cos(glm::radians(-pitch));
+
+	 //    // std::cout << "front " << front.x << " " << front.y << " " << front.z << std::endl;
+		// cameraDir = glm::normalize(front);
+	 //    cameraRight = glm::normalize(glm::cross(cameraDir, mWorldUp));
+	 //    cameraUp = glm::normalize(glm::cross(cameraRight, cameraDir));
+		// // std::cout << "cameraDir " << cameraDir.x << " " << cameraDir.y << " " << cameraDir.z << std::endl;
+		// // std::cout << "cameraRight " << cameraRight.x << " " << cameraRight.y << " " << cameraRight.z << std::endl;
+		// // std::cout << "cameraUp " << cameraUp.x << " " << cameraUp.y << " " << cameraUp.z << std::endl;
 }
 
 glm::mat4 lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 upDir)
 {
 	glm::vec3 forward = glm::normalize(eye - target);
-    glm::vec3 left = glm::normalize(glm::cross(upDir ,forward));
-    glm::vec3 up = glm::normalize(glm::cross(forward, left));
+	glm::vec3 left = glm::normalize(glm::cross(upDir ,forward));
+	glm::vec3 up = glm::cross(forward, left);
 
-    glm::mat4 matrix(1.0);
+	glm::mat4 matrix(1.0);
 
-    matrix[0][0] = left.x;
-    matrix[1][0] = left.y;
-    matrix[2][0] = left.z;
-    matrix[0][1] = up.x;
-    matrix[1][1] = up.y;
-    matrix[2][1] = up.z;
-    matrix[0][2] = forward.x;
-    matrix[1][2] = forward.y;
-    matrix[2][2] = forward.z;
+	matrix[0][0] = left.x;
+	matrix[1][0] = left.y;
+	matrix[2][0] = left.z;
+	matrix[0][1] = up.x;
+	matrix[1][1] = up.y;
+	matrix[2][1] = up.z;
+	matrix[0][2] = forward.x;
+	matrix[1][2] = forward.y;
+	matrix[2][2] = forward.z;
 
-    matrix[3][0] = -left.x * eye.x - left.y * eye.y - left.z * eye.z;
-    matrix[3][1] = -up.x * eye.x - up.y * eye.y - up.z * eye.z;
-    matrix[3][2] = -forward.x * eye.x - forward.y * eye.y - forward.z * eye.z;
+	matrix[3][0] = -left.x * eye.x - left.y * eye.y - left.z * eye.z;
+	matrix[3][1] = -up.x * eye.x - up.y * eye.y - up.z * eye.z;
+	matrix[3][2] = -forward.x * eye.x - forward.y * eye.y - forward.z * eye.z;
 
-    return (matrix);
+	return (matrix);
 }
+
+// glm::mat4 lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
+// {
+//     glm::vec3 zaxis = normalize(eye - target);    
+//     glm::vec3 xaxis = normalize(cross(up, zaxis));
+//     glm::vec3 yaxis = cross(zaxis, xaxis);     
+
+//     glm::mat4 orientation(
+//        xaxis[0], yaxis[0], zaxis[0], 0,
+//        xaxis[1], yaxis[1], zaxis[1], 0,
+//        xaxis[2], yaxis[2], zaxis[2], 0,
+//          0,       0,       0,     1);
+
+//     glm::mat4 translation(
+//               1,       0,       0, 0,
+//               0,       1,       0, 0, 
+//               0,       0,       1, 0,
+//         -eye[0], -eye[1], -eye[2], 1);
+
+//     return orientation * translation;
+// }
 
 int main (void) {
 
@@ -498,7 +612,15 @@ int main (void) {
 
 		GLCall(glUseProgram(program));
 
-		glm::mat4 view = lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
+		// glm::mat4 view = lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
+		// glm::mat4 view = glm::eulerAngleYXZ(cameraDir.y, cameraDir.x, cameraDir.z);
+
+		// glm::quat targetOrientation = normalize(LookAt(cameraPos, cameraUp));
+		// gOrientation2 = RotateTowards(gOrientation2, targetOrientation, 1.0f*delta_time);
+		// glm::mat4 view = mat4_cast(gOrientation2);
+
+		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
+
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
 		glm::mat4 mvp = projection * view * model;
