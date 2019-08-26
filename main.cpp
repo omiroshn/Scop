@@ -43,7 +43,7 @@ struct Vertex
 {
 	glm::vec4   position;
 	glm::vec3   normal;
-	// glm::vec2   TexCoords;
+	glm::vec2   texCoords;
 };
 
 int programIsRunning = 1;
@@ -190,6 +190,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 
 	std::vector<glm::vec4> positions;
 	std::vector<glm::vec3> normals;
+	std::vector<glm::vec2> tx;
 
 	std::string line;
 	while (getline(in, line))
@@ -237,6 +238,16 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 			normals.push_back(v);
 			free_strsplit(sub);
 		}
+		else if (line.substr(0,3) == "vt ")
+		{
+			char ** sub = ft_strsplit(line.substr(3).c_str(), ' ');
+			glm::vec2 v;
+			v.x = std::stof(sub[0]);
+			v.y = std::stof(sub[1]);
+
+			tx.push_back(v);
+			free_strsplit(sub);
+		}
 	}
 	
 	if (normals.empty())
@@ -254,11 +265,24 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 			normals[ia] = normals[ib] = normals[ic] = normal;
 		}
 	}
-
-	for (int i = 0; i < elements.size(); i++)
+	
+	if (tx.empty())
 	{
-		Vertex v = {positions[i], normals[i]};
-		vertices.push_back(v);
+		printf("No texture coordinates (VT) found.");
+		glm::vec2 text(0.0f,0.0f);
+		for (int i = 0; i < elements.size(); i++)
+		{
+			Vertex v = {positions[i], normals[i], text};
+			vertices.push_back(v);
+		}
+	}
+	else
+	{
+		for (int i = 0; i < elements.size(); i++)
+		{
+			Vertex v = {positions[i], normals[i], tx[i]};
+			vertices.push_back(v);
+		}
 	}
 }
 
@@ -341,33 +365,59 @@ void handle_events()
 			keyStates[e.key.keysym.scancode] = false;
 		else if (e.type == SDL_MOUSEMOTION)
 		{
-			{
-				t_vec3 up = vec3_init(mWorldUp.x, mWorldUp.y, mWorldUp.z);
-				t_quaternion q = init_quat_deg(up, -e.motion.xrel);
-				t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
-				dir = vec3_normalize(quat_transform_vec3(q, dir));
-				t_vec3 right = vec3_cross(dir, up);
-				cameraDir.x = dir.x;
-				cameraDir.y = dir.y;
-				cameraDir.z = dir.z;
-				cameraRight.x = right.x;
-				cameraRight.y = right.y;
-				cameraRight.z = right.z;
-			}
+			// if (-e.motion.xrel < 0 || -e.motion.xrel > 0)
+			// {
+			// 	t_vec3 up = vec3_init(mWorldUp.x, mWorldUp.y, mWorldUp.z);
+			// 	t_quaternion q = init_quat_deg(up, -e.motion.xrel * delta_time * 50);
+			// 	t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+			// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
+			// 	t_vec3 right = vec3_cross(dir, up);
+			// 	cameraDir.x = dir.x;
+			// 	cameraDir.y = dir.y;
+			// 	cameraDir.z = dir.z;
+			// 	cameraRight.x = right.x;
+			// 	cameraRight.y = right.y;
+			// 	cameraRight.z = right.z;
+			// }
 
-			{
-				t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
-				t_quaternion q = init_quat_deg(right, -e.motion.yrel);
-				t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
-				dir = vec3_normalize(quat_transform_vec3(q, dir));
-				t_vec3 up = vec3_cross(right, dir);
-				cameraDir.x = dir.x;
-				cameraDir.y = dir.y;
-				cameraDir.z = dir.z;
-				cameraUp.x = up.x;
-				cameraUp.y = up.y;
-				cameraUp.z = up.z;
-			}
+			// if (-e.motion.yrel < 0 || -e.motion.yrel > 0)
+			// {
+			// 	t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
+			// 	t_quaternion q = init_quat_deg(right, -e.motion.yrel * delta_time * 50);
+			// 	t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+			// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
+			// 	t_vec3 up = vec3_cross(right, dir);
+			// 	cameraDir.x = dir.x;
+			// 	cameraDir.y = dir.y;
+			// 	cameraDir.z = dir.z;
+			// 	cameraUp.x = up.x;
+			// 	cameraUp.y = up.y;
+			// 	cameraUp.z = up.z;
+			// }
+
+			
+			t_vec3 up = vec3_init(cameraUp.x, cameraUp.y, cameraUp.z);
+			t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
+			t_quaternion q = init_quat_deg(up, -e.motion.xrel * delta_time * 50);
+			t_quaternion r = init_quat_deg(right, -e.motion.yrel * delta_time * 50);
+			t_quaternion su = quat_mult_quat(q,r);
+			
+			t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+			dir = quat_transform_vec3(su, dir);
+			cameraDir.x = dir.x;
+			cameraDir.y = dir.y;
+			cameraDir.z = dir.z;
+			
+			right = vec3_cross(dir, up);
+			cameraRight.x = right.x;
+			cameraRight.y = right.y;
+			cameraRight.z = right.z;
+
+			up = vec3_cross(right, dir);
+			cameraUp.x = up.x;
+			cameraUp.y = up.y;
+			cameraUp.z = up.z;
+			
 		}
 	}
 
@@ -386,62 +436,62 @@ void handle_events()
 	if (keyStates[SDL_SCANCODE_E])
 		cameraPos += cameraUp * cameraSpeed;
 
-	if (keyStates[SDL_SCANCODE_LEFT])
-	{
-		t_vec3 up = vec3_init(cameraUp.x, cameraUp.y, cameraUp.z);
-		t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
-		t_quaternion q = init_quat_deg(up, 180 * delta_time);
-		dir = vec3_normalize(quat_transform_vec3(q, dir));
-		t_vec3 right = vec3_cross(dir, up);
-		cameraDir.x = dir.x;
-		cameraDir.y = dir.y;
-		cameraDir.z = dir.z;
-		cameraRight.x = right.x;
-		cameraRight.y = right.y;
-		cameraRight.z = right.z;
-	}
-	if (keyStates[SDL_SCANCODE_RIGHT])
-	{
-		t_vec3 up = vec3_init(cameraUp.x, cameraUp.y, cameraUp.z);
-		t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
-		t_quaternion q = init_quat_deg(up, -180 * delta_time);
-		dir = vec3_normalize(quat_transform_vec3(q, dir));
-		t_vec3 right = vec3_cross(dir, up);
-		cameraDir.x = dir.x;
-		cameraDir.y = dir.y;
-		cameraDir.z = dir.z;
-		cameraRight.x = right.x;
-		cameraRight.y = right.y;
-		cameraRight.z = right.z;
-	}
-	if (keyStates[SDL_SCANCODE_UP])
-	{
-		t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
-		t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
-		t_quaternion q = init_quat_deg(right, 180 * delta_time);
-		dir = vec3_normalize(quat_transform_vec3(q, dir));
-		t_vec3 up = vec3_cross(right, dir);
-		cameraDir.x = dir.x;
-		cameraDir.y = dir.y;
-		cameraDir.z = dir.z;
-		cameraUp.x = up.x;
-		cameraUp.y = up.y;
-		cameraUp.z = up.z;
-	}
-	if (keyStates[SDL_SCANCODE_DOWN])
-	{
-		t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
-		t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
-		t_quaternion q = init_quat_deg(right, -180 * delta_time);
-		dir = vec3_normalize(quat_transform_vec3(q, dir));
-		t_vec3 up = vec3_cross(right, dir);
-		cameraDir.x = dir.x;
-		cameraDir.y = dir.y;
-		cameraDir.z = dir.z;
-		cameraUp.x = up.x;
-		cameraUp.y = up.y;
-		cameraUp.z = up.z;
-	}
+	// if (keyStates[SDL_SCANCODE_LEFT])
+	// {
+	// 	t_vec3 up = vec3_init(cameraUp.x, cameraUp.y, cameraUp.z);
+	// 	t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+	// 	t_quaternion q = init_quat_deg(up, 180 * delta_time);
+	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
+	// 	t_vec3 right = vec3_cross(dir, up);
+	// 	cameraDir.x = dir.x;
+	// 	cameraDir.y = dir.y;
+	// 	cameraDir.z = dir.z;
+	// 	cameraRight.x = right.x;
+	// 	cameraRight.y = right.y;
+	// 	cameraRight.z = right.z;
+	// }
+	// if (keyStates[SDL_SCANCODE_RIGHT])
+	// {
+	// 	t_vec3 up = vec3_init(cameraUp.x, cameraUp.y, cameraUp.z);
+	// 	t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+	// 	t_quaternion q = init_quat_deg(up, -180 * delta_time);
+	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
+	// 	t_vec3 right = vec3_cross(dir, up);
+	// 	cameraDir.x = dir.x;
+	// 	cameraDir.y = dir.y;
+	// 	cameraDir.z = dir.z;
+	// 	cameraRight.x = right.x;
+	// 	cameraRight.y = right.y;
+	// 	cameraRight.z = right.z;
+	// }
+	// if (keyStates[SDL_SCANCODE_UP])
+	// {
+	// 	t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
+	// 	t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+	// 	t_quaternion q = init_quat_deg(right, 180 * delta_time);
+	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
+	// 	t_vec3 up = vec3_cross(right, dir);
+	// 	cameraDir.x = dir.x;
+	// 	cameraDir.y = dir.y;
+	// 	cameraDir.z = dir.z;
+	// 	cameraUp.x = up.x;
+	// 	cameraUp.y = up.y;
+	// 	cameraUp.z = up.z;
+	// }
+	// if (keyStates[SDL_SCANCODE_DOWN])
+	// {
+	// 	t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
+	// 	t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+	// 	t_quaternion q = init_quat_deg(right, -180 * delta_time);
+	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
+	// 	t_vec3 up = vec3_cross(right, dir);
+	// 	cameraDir.x = dir.x;
+	// 	cameraDir.y = dir.y;
+	// 	cameraDir.z = dir.z;
+	// 	cameraUp.x = up.x;
+	// 	cameraUp.y = up.y;
+	// 	cameraUp.z = up.z;
+	// }
 
 	// print_vec(cameraUp);
 
@@ -533,10 +583,13 @@ int main (void) {
 	// load_obj("res/models/cube/cube.obj", vertices, elements);
 	// load_obj("res/models/tree/lowpolytree.obj", vertices, elements);
 	// load_obj("res/models/cat/12221_Cat_v1_l3.obj", vertices, elements);
+	// load_obj("res/models/earth/earth.obj", vertices, elements);
+	load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices, elements);
+	
 	// load_obj("res/models/plant/plant.obj", vertices, elements);
-	// load_obj("resources/42.obj", vertices, elements);
-	// load_obj("resources/teapot.obj", vertices, elements);
-	load_obj("resources/teapot2.obj", vertices, elements);
+	// load_obj("res/models/42/42.obj", vertices, elements);
+	// load_obj("res/models/teapot/teapot.obj", vertices, elements);
+	// load_obj("res/models/teapot/teapot2.obj", vertices, elements);
 	
 	unsigned int va, vbo_vertices, ibo_elements;
 
@@ -561,6 +614,8 @@ int main (void) {
 	GLCall( glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0 ));
 	GLCall( glEnableVertexAttribArray(1) );
 	GLCall( glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, normal) ));
+	GLCall( glEnableVertexAttribArray(2) );
+	GLCall( glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, texCoords) ));
 
 	const char* vertex_shader = "res/shaders/vertex_shader.glsl";
 	const char* fragment_shader = "res/shaders/fragment_shader.glsl";
@@ -572,25 +627,24 @@ int main (void) {
 		return (0);
 	}
 
-	// unsigned int textureID;
-	// int m_Width, m_Height, m_BPP;
-	// stbi_set_flip_vertically_on_load(1);
-	// unsigned char* m_LocalBuffer = stbi_load("/Users/omiroshn/Desktop/newScop/res/textures/gold-dollar.png", &m_Width, &m_Height, &m_BPP, 4);
-	// GLCall( glGenTextures(1, &textureID) );
-	// GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
+	unsigned int textureID;
+	int m_Width, m_Height, m_BPP;
+	stbi_set_flip_vertically_on_load(1);
+	// unsigned char* m_LocalBuffer = stbi_load("res/models/cat/Cat_diffuse.jpg", &m_Width, &m_Height, &m_BPP, 4);
+	// unsigned char* m_LocalBuffer = stbi_load("res/models/earth/4096_earth.jpg", &m_Width, &m_Height, &m_BPP, 4);
+	unsigned char* m_LocalBuffer = stbi_load("res/models/penguin/Penguin_Diffuse_Color.png", &m_Width, &m_Height, &m_BPP, 4);
+	GLCall( glGenTextures(1, &textureID) );
+	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
 
-	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
-	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
-	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE) );
-	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE) );
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) );
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) );
 
-	// GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer) );
+	GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer) );
 	
-	// GLCall( glActiveTexture(GL_TEXTURE0) );
-	// GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
-
-	// GLCall(int TextureLocation = glGetUniformLocation(program, "u_Texture"));
-	// GLCall(glUniform1i(TextureLocation, 0));
+	GLCall( glActiveTexture(GL_TEXTURE0) );
+	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
 
 	GLCall(glEnable(GL_BLEND));
 	GLCall(glEnable(GL_DEPTH_TEST));
