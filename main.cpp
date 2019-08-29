@@ -42,8 +42,8 @@
 struct Vertex
 {
 	glm::vec4   position;
-	glm::vec3   normal;
 	glm::vec2   texCoords;
+	glm::vec3   normal;
 };
 
 int programIsRunning = 1;
@@ -169,123 +169,6 @@ int   read_shaders(const char *vertex_path, const char *fragment_path)
 	return (program);
 }
 
-int get_size(char **sub)
-{
-	int i;
-
-	i = 1;
-	while (*++sub)
-		i++;
-	return (i);
-}
-
-void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<GLushort> &elements)
-{
-	std::ifstream in(filename, std::ios::in);
-	if (!in)
-	{
-		std::cerr << "Cannot open " << filename << std::endl;
-		exit(1);
-	}
-
-	std::vector<glm::vec4> positions;
-	std::vector<glm::vec3> normals;
-	std::vector<glm::vec2> tx;
-
-	std::string line;
-	while (getline(in, line))
-	{
-		if (line.substr(0,2) == "v ")
-		{
-			char ** sub = ft_strsplit(line.substr(2).c_str(), ' ');
-			glm::vec4 v;
-			v.x = std::stof(sub[0]);
-			v.y = std::stof(sub[1]);
-			v.z = std::stof(sub[2]);
-			v.w = 1.0f;
-
-			positions.push_back(v);
-			free_strsplit(sub);
-		}
-		else if (line.substr(0,2) == "f ")
-		{
-			GLushort a,b,c;
-			char *trimmed = ft_strtrim(line.substr(2).c_str());
-			char **sub = ft_strsplit(trimmed, ' ');
-			int size = get_size(sub);
-			int i = 1;
-			while (i < size - 1)
-			{
-				a = std::stoi(sub[0]);
-				b = std::stoi(sub[i]);
-				c = std::stoi(sub[i+1]);
-				elements.push_back(--a);
-				elements.push_back(--b);
-				elements.push_back(--c);
-				i++;
-			}
-			free_strsplit(sub);
-			free(trimmed);
-		}
-		else if (line.substr(0,3) == "vn ")
-		{
-			char ** sub = ft_strsplit(line.substr(3).c_str(), ' ');
-			glm::vec3 v;
-			v.x = std::stof(sub[0]);
-			v.y = std::stof(sub[1]);
-			v.z = std::stof(sub[2]);
-
-			normals.push_back(v);
-			free_strsplit(sub);
-		}
-		else if (line.substr(0,3) == "vt ")
-		{
-			char ** sub = ft_strsplit(line.substr(3).c_str(), ' ');
-			glm::vec2 v;
-			v.x = std::stof(sub[0]);
-			v.y = std::stof(sub[1]);
-
-			tx.push_back(v);
-			free_strsplit(sub);
-		}
-	}
-	
-	if (normals.empty())
-	{
-		normals.resize(positions.size(), glm::vec3(0.0,0.0,0.0));
-		for (int i = 0; i < elements.size(); i+=3)
-		{
-			GLushort ia = elements[i];
-			GLushort ib = elements[i+1];
-			GLushort ic = elements[i+2];
-			glm::vec3 normal = glm::normalize(glm::cross(
-				glm::vec3(positions[ib]) - glm::vec3(positions[ia]),
-				glm::vec3(positions[ic]) - glm::vec3(positions[ia])
-			));
-			normals[ia] = normals[ib] = normals[ic] = normal;
-		}
-	}
-	
-	if (tx.empty())
-	{
-		printf("No texture coordinates (VT) found.");
-		glm::vec2 text(0.0f,0.0f);
-		for (int i = 0; i < elements.size(); i++)
-		{
-			Vertex v = {positions[i], normals[i], text};
-			vertices.push_back(v);
-		}
-	}
-	else
-	{
-		for (int i = 0; i < elements.size(); i++)
-		{
-			Vertex v = {positions[i], normals[i], tx[i]};
-			vertices.push_back(v);
-		}
-	}
-}
-
 # include <stdint.h>
 
 uint64_t	start;
@@ -346,9 +229,14 @@ void initKeys(bool *keyStates)
 float yaw   = 0.0f;
 float pitch =  0.0f;
 
-void print_vec(glm::vec3 vec)
+void print_vec3(glm::vec3 vec)
 {
-	std::cout << "x: " << vec.x << "y: " << vec.y << "z: " << vec.z << std::endl;
+	std::cout << "x: " << vec.x << " y: " << vec.y << " z: " << vec.z << std::endl;
+}
+
+void print_vec4(glm::vec4 vec)
+{
+	std::cout << "x: " << vec.x << " y: " << vec.y << " z: " << vec.z << std::endl;
 }
 
 void handle_events()
@@ -565,6 +453,222 @@ glm::mat4 lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 upDir)
 //     return orientation * translation;
 // }
 
+int ft_chrcnt(char *line, char c)
+{
+	int i;
+	int cnt;
+
+	cnt = 0;
+	i = -1;
+	while (line[++i])
+	{
+		if (line[i] == c)
+			cnt++;
+	}
+	return (cnt);
+}
+
+int get_size(char **sub)
+{
+	int i;
+
+	i = 1;
+	while (*++sub)
+		i++;
+	return (i);
+}
+
+void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<GLushort> &vertexIndices)
+{
+	std::ifstream in(filename, std::ios::in);
+	if (!in)
+	{
+		std::cerr << "Cannot open " << filename << std::endl;
+		exit(1);
+	}
+
+	std::vector<glm::vec4> temp_positions;
+	std::vector<glm::vec2> temp_tx;
+	std::vector<glm::vec3> temp_normals;
+
+	std::vector<unsigned int> uvIndices, normalIndices;
+
+	std::string line;
+	while (getline(in, line))
+	{
+		if (line.substr(0,2) == "v ")
+		{
+			char ** sub = ft_strsplit(line.substr(2).c_str(), ' ');
+			glm::vec4 v;
+			v.x = std::stof(sub[0]);
+			v.y = std::stof(sub[1]);
+			v.z = std::stof(sub[2]);
+			v.w = 1.0f;
+
+			temp_positions.push_back(v);
+			free_strsplit(sub);
+		}
+		else if (line.substr(0,3) == "vt ")
+		{
+			char ** sub = ft_strsplit(line.substr(3).c_str(), ' ');
+			glm::vec2 v;
+			v.x = std::stof(sub[0]);
+			v.y = std::stof(sub[1]);
+
+			temp_tx.push_back(v);
+			free_strsplit(sub);
+		}
+		else if (line.substr(0,3) == "vn ")
+		{
+			char ** sub = ft_strsplit(line.substr(3).c_str(), ' ');
+			glm::vec3 v;
+			v.x = std::stof(sub[0]);
+			v.y = std::stof(sub[1]);
+			v.z = std::stof(sub[2]);
+
+			temp_normals.push_back(v);
+			free_strsplit(sub);
+		}
+		else if (line.substr(0,2) == "f ")
+		{
+			GLushort a,b,c;
+			char *trimmed = ft_strtrim(line.substr(2).c_str());
+			char **sub = ft_strsplit(trimmed, ' ');
+			int size = get_size(sub);
+			int i = 1;
+			while (i < size - 1)
+			{
+				int slashes = ft_chrcnt(sub[0], '/');
+				if (slashes) {
+					char **s1 = ft_strsplit(sub[0], '/');
+					int tmp_size = ft_array_length(sub[0], '/');
+					a = std::stoi(s1[0]);
+					if (slashes == 1 || tmp_size == 3)
+						b = std::stoi(s1[1]);
+					if (slashes == 2 || tmp_size == 2)
+						c = std::stoi(s1[tmp_size == 2 ? 1 : 2]);
+					vertexIndices.push_back(a);
+					uvIndices.push_back(b);
+					normalIndices.push_back(c);
+					free_strsplit(s1);
+				} else {
+					a = sub[0] ? std::stoi(sub[0]) : 0;
+					vertexIndices.push_back(a);
+				}
+				std::cout << a << " ";
+				// a = s1[0] ? std::stoi(s1[0]) : 0;
+				// b = s1[1] ? std::stoi(s1[1]) : 0;
+				// c = s1[2] ? std::stoi(s1[2]) : 0;
+
+				slashes = ft_chrcnt(sub[i], '/');
+				if (slashes) {
+					char **s2 = ft_strsplit(sub[i], '/');
+					int tmp_size = ft_array_length(sub[i], '/');
+					a = std::stoi(s2[0]);
+					if (slashes == 1 || tmp_size == 3)
+						b = std::stoi(s2[1]);
+					if (slashes == 2 || tmp_size == 2)
+						c = std::stoi(s2[tmp_size == 2 ? 1 : 2]);
+					vertexIndices.push_back(a);
+					uvIndices.push_back(b);
+					normalIndices.push_back(c);
+					free_strsplit(s2);
+				} else {
+					a = sub[i] ? std::stoi(sub[i]) : 0;
+					vertexIndices.push_back(a);
+				}
+				std::cout << a << " ";
+
+				slashes = ft_chrcnt(sub[i+1], '/');
+				if (slashes) {
+					char **s3 = ft_strsplit(sub[i+1], '/');
+					int tmp_size = ft_array_length(sub[i+1], '/');
+					a = std::stoi(s3[0]);
+					if (slashes == 1 || tmp_size == 3)
+						b = std::stoi(s3[1]);
+					if (slashes == 2 || tmp_size == 2)
+						c = std::stoi(s3[tmp_size == 2 ? 1 : 2]);
+					vertexIndices.push_back(a);
+					uvIndices.push_back(b);
+					normalIndices.push_back(c);
+					free_strsplit(s3);
+				} else {
+					a = sub[i+1] ? std::stoi(sub[i+1]) : 0;
+					vertexIndices.push_back(a);
+				}
+				std::cout << a << std::endl;
+
+				i++;
+			}
+			free_strsplit(sub);
+			free(trimmed);
+		}
+	}
+
+	// if (normalIndices.empty())
+	// {
+	// 	printf("No normals (VN) found. Generation own normals.");
+	// 	// normals.resize(positions.size(), glm::vec3(0.0,0.0,0.0));
+	// 	for (int i = 0; i < vertexIndices.size(); i+=3)
+	// 	{
+	// 		GLushort ia, ib, ic;
+	// 		std::cout << vertexIndices[i] << std::endl;
+	// 		ia = vertexIndices[i];
+	// 		ib = vertexIndices[i+1];
+	// 		ic = vertexIndices[i+2];
+	// 		// glm::vec3 normal = glm::normalize(glm::cross(
+	// 		// 	glm::vec3(positions[ib]) - glm::vec3(positions[ia]),
+	// 		// 	glm::vec3(positions[ic]) - glm::vec3(positions[ia])
+	// 		// ));
+	// 		// normals[ia] = normals[ib] = normals[ic] = normal;
+	// 	}
+	// }
+	
+	// if (tx.empty())
+	// {
+	// 	printf("No texture coordinates (VT) found.");
+	// 	glm::vec2 text(0.0f,0.0f);
+	// 	for (int i = 0; i < elements.size(); i++)
+	// 	{
+	// 		Vertex v = {positions[i], normals[i], text};
+	// 		vertices.push_back(v);
+	// 	}
+	// }
+	// else
+	// {
+	// 	for (int i = 0; i < elements.size(); i++)
+	// 	{
+	// 		Vertex v = {positions[i], normals[i], tx[i]};
+	// 		vertices.push_back(v);
+	// 	}
+	// }
+
+	std::cout << "Size: " << vertexIndices.size() << std::endl;
+
+	for (int v = 0; v < vertexIndices.size(); v += 3)
+	{
+		for (unsigned int i = 0; i < 3; i += 1) {
+			unsigned int vertexIndex = vertexIndices[v + i];
+			glm::vec4 vertex = temp_positions[vertexIndex - 1];
+			print_vec4(vertex);
+			
+			glm::vec2 uv;
+			if (temp_tx.empty()) {
+				uv = glm::vec2(0.0f,0.0f);
+			} else {
+				unsigned int uvIndex = uvIndices[v + i];
+				uv = temp_tx[uvIndex - 1];
+			}
+			
+			unsigned int normalIndex = normalIndices[v + i];
+			glm::vec3 normal = temp_normals[normalIndex - 1];
+			
+			Vertex v = {vertex, uv, normal,};
+			vertices.push_back(v);
+		}
+	}
+}
+
 int main (void) {
 
 	SDL_Window * window = InitWindow();
@@ -580,11 +684,11 @@ int main (void) {
 	std::vector<Vertex> vertices;
 	std::vector<GLushort> elements;
 
-	// load_obj("res/models/cube/cube.obj", vertices, elements);
+	load_obj("res/models/cube/cube.obj", vertices, elements);
 	// load_obj("res/models/tree/lowpolytree.obj", vertices, elements);
 	// load_obj("res/models/cat/12221_Cat_v1_l3.obj", vertices, elements);
 	// load_obj("res/models/earth/earth.obj", vertices, elements);
-	load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices, elements);
+	// load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices, elements);
 	
 	// load_obj("res/models/plant/plant.obj", vertices, elements);
 	// load_obj("res/models/42/42.obj", vertices, elements);
@@ -627,29 +731,29 @@ int main (void) {
 		return (0);
 	}
 
-	unsigned int textureID;
-	int m_Width, m_Height, m_BPP;
-	stbi_set_flip_vertically_on_load(1);
+	// unsigned int textureID;
+	// int m_Width, m_Height, m_BPP;
+	// // stbi_set_flip_vertically_on_load(1);
 	// unsigned char* m_LocalBuffer = stbi_load("res/models/cat/Cat_diffuse.jpg", &m_Width, &m_Height, &m_BPP, 4);
-	// unsigned char* m_LocalBuffer = stbi_load("res/models/earth/4096_earth.jpg", &m_Width, &m_Height, &m_BPP, 4);
-	unsigned char* m_LocalBuffer = stbi_load("res/models/penguin/Penguin_Diffuse_Color.png", &m_Width, &m_Height, &m_BPP, 4);
-	GLCall( glGenTextures(1, &textureID) );
-	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
+	// // unsigned char* m_LocalBuffer = stbi_load("res/models/earth/4096_earth.jpg", &m_Width, &m_Height, &m_BPP, 4);
+	// // unsigned char* m_LocalBuffer = stbi_load("res/models/penguin/Penguin_Diffuse_Color.png", &m_Width, &m_Height, &m_BPP, 4);
+	// GLCall( glGenTextures(1, &textureID) );
+	// GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
 
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) );
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) );
+	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
+	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
+	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) );
+	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) );
 
-	GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer) );
+	// GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer) );
 	
-	GLCall( glActiveTexture(GL_TEXTURE0) );
-	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
+	// GLCall( glActiveTexture(GL_TEXTURE0) );
+	// GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
 
-	GLCall(glEnable(GL_BLEND));
-	GLCall(glEnable(GL_DEPTH_TEST));
-	GLCall(glDepthFunc(GL_LESS));
-	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+	// GLCall(glEnable(GL_BLEND));
+	// GLCall(glEnable(GL_DEPTH_TEST));
+	// GLCall(glDepthFunc(GL_LESS));
+	// GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
 	int size;
 	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
