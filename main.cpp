@@ -493,6 +493,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 
 	std::vector<unsigned int> uvIndices, normalIndices;
 
+	int faces_count = 0;
 	std::string line;
 	while (getline(in, line))
 	{
@@ -531,6 +532,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 		}
 		else if (line.substr(0,2) == "f ")
 		{
+			faces_count++;
 			GLushort a,b,c;
 			char *trimmed = ft_strtrim(line.substr(2).c_str());
 			char **sub = ft_strsplit(trimmed, ' ');
@@ -607,7 +609,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 
 	// if (normalIndices.empty())
 	// {
-	// 	printf("No normals (VN) found. Generation own normals.");
+	// 	printf("No normals (VN) found. Generation own normals.\n");
 	// 	// normals.resize(positions.size(), glm::vec3(0.0,0.0,0.0));
 	// 	for (int i = 0; i < vertexIndices.size(); i+=3)
 	// 	{
@@ -626,7 +628,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 	
 	// if (tx.empty())
 	// {
-	// 	printf("No texture coordinates (VT) found.");
+	// 	printf("No texture coordinates (VT) found.\n");
 	// 	glm::vec2 text(0.0f,0.0f);
 	// 	for (int i = 0; i < elements.size(); i++)
 	// 	{
@@ -650,6 +652,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 		for (unsigned int i = 0; i < 3; i += 1) {
 			unsigned int vertexIndex = vertexIndices[v + i];
 			glm::vec4 vertex = temp_positions[vertexIndex - 1];
+			std::cout << vertexIndex<< " ";
 			print_vec4(vertex);
 			
 			glm::vec2 uv;
@@ -666,6 +669,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 			Vertex v = {vertex, uv, normal,};
 			vertices.push_back(v);
 		}
+		std::cout << "\n";
 	}
 }
 
