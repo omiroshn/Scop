@@ -42,8 +42,8 @@
 struct Vertex
 {
 	glm::vec4   position;
-	glm::vec2   texCoords;
 	glm::vec3   normal;
+	glm::vec2   texCoords;
 };
 
 int programIsRunning = 1;
@@ -478,7 +478,34 @@ int get_size(char **sub)
 	return (i);
 }
 
-void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<GLushort> &vertexIndices)
+void parse(std::vector<GLushort> &vertexIndices,
+		std::vector<GLushort> &uvIndices,
+		std::vector<GLushort> &normalIndices,
+		char **sub,
+		int index)
+{
+	GLushort a,b,c;
+	int slashes = ft_chrcnt(sub[index], '/');
+	if (slashes) {
+		char **s1 = ft_strsplit(sub[index], '/');
+		int tmp_size = ft_array_length(sub[index], '/');
+		a = std::stoi(s1[0]);
+		if (slashes == 1 || tmp_size == 3)
+			b = std::stoi(s1[1]);
+		if (slashes == 2 || tmp_size == 2)
+			c = std::stoi(s1[tmp_size == 2 ? 1 : 2]);
+		vertexIndices.push_back(a);
+		uvIndices.push_back(b);
+		normalIndices.push_back(c);
+		free_strsplit(s1);
+	} else {
+		a = sub[index] ? std::stoi(sub[index]) : 4;
+		vertexIndices.push_back(a);
+	}
+	std::cout << a << " ";
+}
+
+void load_obj(const char *filename, std::vector<Vertex> &vertices)
 {
 	std::ifstream in(filename, std::ios::in);
 	if (!in)
@@ -491,7 +518,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 	std::vector<glm::vec2> temp_tx;
 	std::vector<glm::vec3> temp_normals;
 
-	std::vector<unsigned int> uvIndices, normalIndices;
+	std::vector<GLushort> vertexIndices, uvIndices, normalIndices;
 
 	int faces_count = 0;
 	std::string line;
@@ -533,73 +560,16 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 		else if (line.substr(0,2) == "f ")
 		{
 			faces_count++;
-			GLushort a,b,c;
 			char *trimmed = ft_strtrim(line.substr(2).c_str());
 			char **sub = ft_strsplit(trimmed, ' ');
 			int size = get_size(sub);
 			int i = 1;
 			while (i < size - 1)
 			{
-				int slashes = ft_chrcnt(sub[0], '/');
-				if (slashes) {
-					char **s1 = ft_strsplit(sub[0], '/');
-					int tmp_size = ft_array_length(sub[0], '/');
-					a = std::stoi(s1[0]);
-					if (slashes == 1 || tmp_size == 3)
-						b = std::stoi(s1[1]);
-					if (slashes == 2 || tmp_size == 2)
-						c = std::stoi(s1[tmp_size == 2 ? 1 : 2]);
-					vertexIndices.push_back(a);
-					uvIndices.push_back(b);
-					normalIndices.push_back(c);
-					free_strsplit(s1);
-				} else {
-					a = sub[0] ? std::stoi(sub[0]) : 0;
-					vertexIndices.push_back(a);
-				}
-				std::cout << a << " ";
-				// a = s1[0] ? std::stoi(s1[0]) : 0;
-				// b = s1[1] ? std::stoi(s1[1]) : 0;
-				// c = s1[2] ? std::stoi(s1[2]) : 0;
-
-				slashes = ft_chrcnt(sub[i], '/');
-				if (slashes) {
-					char **s2 = ft_strsplit(sub[i], '/');
-					int tmp_size = ft_array_length(sub[i], '/');
-					a = std::stoi(s2[0]);
-					if (slashes == 1 || tmp_size == 3)
-						b = std::stoi(s2[1]);
-					if (slashes == 2 || tmp_size == 2)
-						c = std::stoi(s2[tmp_size == 2 ? 1 : 2]);
-					vertexIndices.push_back(a);
-					uvIndices.push_back(b);
-					normalIndices.push_back(c);
-					free_strsplit(s2);
-				} else {
-					a = sub[i] ? std::stoi(sub[i]) : 0;
-					vertexIndices.push_back(a);
-				}
-				std::cout << a << " ";
-
-				slashes = ft_chrcnt(sub[i+1], '/');
-				if (slashes) {
-					char **s3 = ft_strsplit(sub[i+1], '/');
-					int tmp_size = ft_array_length(sub[i+1], '/');
-					a = std::stoi(s3[0]);
-					if (slashes == 1 || tmp_size == 3)
-						b = std::stoi(s3[1]);
-					if (slashes == 2 || tmp_size == 2)
-						c = std::stoi(s3[tmp_size == 2 ? 1 : 2]);
-					vertexIndices.push_back(a);
-					uvIndices.push_back(b);
-					normalIndices.push_back(c);
-					free_strsplit(s3);
-				} else {
-					a = sub[i+1] ? std::stoi(sub[i+1]) : 0;
-					vertexIndices.push_back(a);
-				}
-				std::cout << a << std::endl;
-
+				parse(vertexIndices, uvIndices, normalIndices, sub, 0);
+				parse(vertexIndices, uvIndices, normalIndices, sub, i);
+				parse(vertexIndices, uvIndices, normalIndices, sub, i+1);
+				std::cout << "\n";
 				i++;
 			}
 			free_strsplit(sub);
@@ -649,27 +619,21 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices, std::vector<G
 
 	for (int v = 0; v < vertexIndices.size(); v += 3)
 	{
-		for (unsigned int i = 0; i < 3; i += 1) {
-			unsigned int vertexIndex = vertexIndices[v + i];
-			glm::vec4 vertex = temp_positions[vertexIndex - 1];
-			std::cout << vertexIndex<< " ";
-			print_vec4(vertex);
-			
+		for (unsigned int i = 0; i < 3; i += 1)
+		{
+			glm::vec4 vertex = temp_positions[vertexIndices[v + i] - 1];
+			glm::vec3 normal = temp_normals[normalIndices[v + i] - 1];
+
 			glm::vec2 uv;
 			if (temp_tx.empty()) {
 				uv = glm::vec2(0.0f,0.0f);
 			} else {
-				unsigned int uvIndex = uvIndices[v + i];
-				uv = temp_tx[uvIndex - 1];
+				uv = temp_tx[uvIndices[v + i] - 1];
 			}
 			
-			unsigned int normalIndex = normalIndices[v + i];
-			glm::vec3 normal = temp_normals[normalIndex - 1];
-			
-			Vertex v = {vertex, uv, normal,};
-			vertices.push_back(v);
+			Vertex ver = {vertex, normal, uv};
+			vertices.push_back(ver);
 		}
-		std::cout << "\n";
 	}
 }
 
@@ -686,18 +650,18 @@ int main (void) {
 	initKeys(keyStates);
 
 	std::vector<Vertex> vertices;
-	std::vector<GLushort> elements;
 
-	load_obj("res/models/cube/cube.obj", vertices, elements);
-	// load_obj("res/models/tree/lowpolytree.obj", vertices, elements);
-	// load_obj("res/models/cat/12221_Cat_v1_l3.obj", vertices, elements);
-	// load_obj("res/models/earth/earth.obj", vertices, elements);
-	// load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices, elements);
+	load_obj("res/models/cube/newCube.obj", vertices);
+	// load_obj("res/models/cube/cube.obj", vertices);
+	// load_obj("res/models/tree/lowpolytree.obj", vertices);
+	// load_obj("res/models/cat/12221_Cat_v1_l3.obj", vertices);
+	// load_obj("res/models/earth/earth.obj", vertices);
+	// load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices);
 	
-	// load_obj("res/models/plant/plant.obj", vertices, elements);
-	// load_obj("res/models/42/42.obj", vertices, elements);
-	// load_obj("res/models/teapot/teapot.obj", vertices, elements);
-	// load_obj("res/models/teapot/teapot2.obj", vertices, elements);
+	// load_obj("res/models/plant/plant.obj", vertices);
+	// load_obj("res/models/42/42.obj", vertices);
+	// load_obj("res/models/teapot/teapot.obj", vertices);
+	// load_obj("res/models/teapot/teapot2.obj", vertices);
 	
 	unsigned int va, vbo_vertices, ibo_elements;
 
@@ -711,15 +675,8 @@ int main (void) {
 	if (vbo_vertices == 0)
 		std::cout << "vbo_vertices " << vbo_vertices << std::endl;
 
-	GLCall( glGenBuffers(1, &ibo_elements) );
-	GLCall( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_elements) );
-	GLCall( glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements.size() * sizeof(elements[0]), &elements[0], GL_STATIC_DRAW) );
-
-	if (ibo_elements == 0)
-		std::cout << "ibo_elements " << ibo_elements << std::endl;
-
 	GLCall( glEnableVertexAttribArray(0) );
-	GLCall( glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0 ));
+	GLCall( glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, position) ));
 	GLCall( glEnableVertexAttribArray(1) );
 	GLCall( glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, normal) ));
 	GLCall( glEnableVertexAttribArray(2) );
@@ -735,33 +692,30 @@ int main (void) {
 		return (0);
 	}
 
-	// unsigned int textureID;
-	// int m_Width, m_Height, m_BPP;
-	// // stbi_set_flip_vertically_on_load(1);
+	unsigned int textureID;
+	int m_Width, m_Height, m_BPP;
+	// stbi_set_flip_vertically_on_load(1);
+	unsigned char* m_LocalBuffer = stbi_load("res/models/cube/ramsey.jpg", &m_Width, &m_Height, &m_BPP, 4);
 	// unsigned char* m_LocalBuffer = stbi_load("res/models/cat/Cat_diffuse.jpg", &m_Width, &m_Height, &m_BPP, 4);
-	// // unsigned char* m_LocalBuffer = stbi_load("res/models/earth/4096_earth.jpg", &m_Width, &m_Height, &m_BPP, 4);
-	// // unsigned char* m_LocalBuffer = stbi_load("res/models/penguin/Penguin_Diffuse_Color.png", &m_Width, &m_Height, &m_BPP, 4);
-	// GLCall( glGenTextures(1, &textureID) );
-	// GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
+	// unsigned char* m_LocalBuffer = stbi_load("res/models/earth/4096_earth.jpg", &m_Width, &m_Height, &m_BPP, 4);
+	// unsigned char* m_LocalBuffer = stbi_load("res/models/penguin/Penguin_Diffuse_Color.png", &m_Width, &m_Height, &m_BPP, 4);
+	GLCall( glGenTextures(1, &textureID) );
+	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
 
-	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
-	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
-	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) );
-	// GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) );
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) );
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) );
 
-	// GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer) );
+	GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer) );
 	
-	// GLCall( glActiveTexture(GL_TEXTURE0) );
-	// GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
+	GLCall( glActiveTexture(GL_TEXTURE0) );
+	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
 
-	// GLCall(glEnable(GL_BLEND));
-	// GLCall(glEnable(GL_DEPTH_TEST));
-	// GLCall(glDepthFunc(GL_LESS));
-	// GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-
-	int size;
-	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-	std::cout << "Vertices loaded: " << size << std::endl;
+	GLCall(glEnable(GL_BLEND));
+	GLCall(glEnable(GL_DEPTH_TEST));
+	GLCall(glDepthFunc(GL_LESS));
+	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
 	while (programIsRunning)
 	{
@@ -796,7 +750,8 @@ int main (void) {
 		GLCall(glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, &mvp[0][0]));
 
 		GLCall(glBindVertexArray(va));
-		GLCall(glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, NULL));
+		// GLCall(glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, NULL));
+		GLCall(glDrawArrays(GL_TRIANGLES, 0, vertices.size()));
 
 		SDL_GL_SwapWindow(window);
 	}
