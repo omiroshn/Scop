@@ -637,6 +637,128 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices)
 	}
 }
 
+unsigned int bind_cubemap(std::vector<std::string> textures_faces)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+	std::cout <<"bind_cubemap "<< textureID << std::endl;
+
+	int width, height, nrChannels;
+	for (GLuint i = 0; i < textures_faces.size(); i++)
+	{
+		unsigned char *data = stbi_load(textures_faces[i].c_str(), &width, &height, &nrChannels, 4);
+		if (data)
+        {
+			std::cout << textures_faces[i].c_str() <<std::endl;
+			glTexImage2D(
+				GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
+				0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data
+			);
+			std::cout << GL_TEXTURE_CUBE_MAP_POSITIVE_X + i<<std::endl;
+			stbi_image_free(data);
+		}
+		else
+        {
+            std::cout << "Cubemap texture failed to load at path: " << textures_faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	return (textureID);
+}
+
+unsigned int bind_texture(const char *path)
+{
+	unsigned int textureID;
+	GLCall( glGenTextures(1, &textureID) );
+	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
+	std::cout <<"bind_texture "<< textureID << std::endl;
+
+	int m_Width, m_Height, m_BPP;
+	stbi_set_flip_vertically_on_load(1);
+	unsigned char* data = stbi_load(path, &m_Width, &m_Height, &m_BPP, 4);
+	if (data)
+    {
+		GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data) );
+		GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
+		GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
+		GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE) );
+		GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE) );
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "Cubemap texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+	}
+	GLCall( glBindTexture(GL_TEXTURE_2D, 0) );
+	return (textureID);
+}
+
+struct Binded
+{
+	unsigned int vao;
+	unsigned int program;
+};
+
+void draw_object(unsigned int size, unsigned int program);
+void draw_skybox(unsigned int size, unsigned int program);
+
+Binded set_up_object(std::vector<Vertex> vertices)
+{
+	unsigned int vao, vbo;
+	GLCall( glGenVertexArrays(1, &vao) );
+	GLCall( glGenBuffers(1, &vbo) );
+	GLCall( glBindVertexArray(vao) );
+	GLCall( glBindBuffer(GL_ARRAY_BUFFER, vbo) );
+	GLCall( glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW) );
+	if (vbo == 0)
+		std::cout << "vbo " << vbo << std::endl;
+
+	GLCall( glEnableVertexAttribArray(0) );
+	GLCall( glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, position) ));
+	GLCall( glEnableVertexAttribArray(1) );
+	GLCall( glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, normal) ));
+	GLCall( glEnableVertexAttribArray(2) );
+	GLCall( glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, texCoords) ));
+	unsigned int program = read_shaders(
+		"res/shaders/vertex_shader.glsl",
+		"res/shaders/fragment_shader.glsl");
+	if (!program) {
+		printf("Failed to read shaders\n");
+		exit(0);
+	}
+	return (Binded){vao, program};
+}
+
+Binded set_up_skybox(std::vector<Vertex> vertices)
+{
+	unsigned int vao, vbo;
+	GLCall( glGenVertexArrays(1, &vao) );
+	GLCall( glGenBuffers(1, &vbo) );
+	GLCall( glBindVertexArray(vao) );
+	GLCall( glBindBuffer(GL_ARRAY_BUFFER, vbo) );
+	GLCall( glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW) );
+
+	GLCall( glEnableVertexAttribArray(0) );
+	GLCall( glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, position) ));
+	unsigned int program = read_shaders(
+		"res/shaders/skybox.vt.glsl",
+		"res/shaders/skybox.fg.glsl");
+	if (!program) {
+		printf("Failed to read shaders\n");
+		exit(0);
+	}
+	return (Binded){vao, program};
+}
+
 int main (void) {
 
 	SDL_Window * window = InitWindow();
@@ -646,71 +768,46 @@ int main (void) {
 
 	init_timer();
 	tick();
-	// delta_time = get_delta_time();
 	initKeys(keyStates);
 
 	std::vector<Vertex> vertices;
-
-	load_obj("res/models/cube/newCube.obj", vertices);
+	// load_obj("res/models/cube/newCube.obj", vertices);
 	// load_obj("res/models/cube/cube.obj", vertices);
 	// load_obj("res/models/tree/lowpolytree.obj", vertices);
 	// load_obj("res/models/cat/12221_Cat_v1_l3.obj", vertices);
 	// load_obj("res/models/earth/earth.obj", vertices);
-	// load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices);
-	
+	load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices);
+	// load_obj("res/models/Notebook/Lowpoly_Notebook_2.obj", vertices);
 	// load_obj("res/models/plant/plant.obj", vertices);
 	// load_obj("res/models/42/42.obj", vertices);
 	// load_obj("res/models/teapot/teapot.obj", vertices);
 	// load_obj("res/models/teapot/teapot2.obj", vertices);
-	
-	unsigned int va, vbo_vertices, ibo_elements;
 
-	GLCall( glGenVertexArrays(1, &va) );
-	GLCall( glBindVertexArray(va) );
+	Binded bindedObj = set_up_object(vertices);
 
-	GLCall( glGenBuffers(1, &vbo_vertices) );
-	GLCall( glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices) );
-	GLCall( glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW) );
+	std::vector<Vertex> skyboxVertices;
+	load_obj("res/models/cube/newCube.obj", skyboxVertices);
+	Binded cubemapObj = set_up_skybox(skyboxVertices);
 
-	if (vbo_vertices == 0)
-		std::cout << "vbo_vertices " << vbo_vertices << std::endl;
+	// const char *path = "res/models/cube/ramsey.jpg";
+	// const char *path = "res/models/Notebook/textures/Lowpoly_Laptop_2.jpg";
+	// const char *path = "res/models/cat/Cat_diffuse.jpg";
+	// const char *path = "res/models/earth/4096_earth.jpg";
+	const char* path = "res/models/penguin/Penguin_Diffuse_Color.png";
+	const char *vinit[] = {
+		"res/models/skybox/right.jpg",
+		"res/models/skybox/left.jpg",
+		"res/models/skybox/top.jpg",
+		"res/models/skybox/bottom.jpg",
+		"res/models/skybox/back.jpg",
+		"res/models/skybox/front.jpg"
+	};
+	std::vector<std::string> textures_faces(vinit, std::end(vinit));
 
-	GLCall( glEnableVertexAttribArray(0) );
-	GLCall( glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, position) ));
-	GLCall( glEnableVertexAttribArray(1) );
-	GLCall( glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, normal) ));
-	GLCall( glEnableVertexAttribArray(2) );
-	GLCall( glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, texCoords) ));
-
-	const char* vertex_shader = "res/shaders/vertex_shader.glsl";
-	const char* fragment_shader = "res/shaders/fragment_shader.glsl";
-	unsigned int program;
-	program = read_shaders(vertex_shader, fragment_shader);
-	if (!program)
-	{
-		printf("Failed to read shaders\n");
-		return (0);
-	}
-
-	unsigned int textureID;
-	int m_Width, m_Height, m_BPP;
-	// stbi_set_flip_vertically_on_load(1);
-	unsigned char* m_LocalBuffer = stbi_load("res/models/cube/ramsey.jpg", &m_Width, &m_Height, &m_BPP, 4);
-	// unsigned char* m_LocalBuffer = stbi_load("res/models/cat/Cat_diffuse.jpg", &m_Width, &m_Height, &m_BPP, 4);
-	// unsigned char* m_LocalBuffer = stbi_load("res/models/earth/4096_earth.jpg", &m_Width, &m_Height, &m_BPP, 4);
-	// unsigned char* m_LocalBuffer = stbi_load("res/models/penguin/Penguin_Diffuse_Color.png", &m_Width, &m_Height, &m_BPP, 4);
-	GLCall( glGenTextures(1, &textureID) );
-	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
-
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) );
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) );
-
-	GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer) );
-	
-	GLCall( glActiveTexture(GL_TEXTURE0) );
-	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
+	unsigned int objectTextureID = bind_texture(path);
+	std::cout << objectTextureID << std::endl;
+	unsigned int skyboxTextureID = bind_cubemap(textures_faces);
+	std::cout << skyboxTextureID << std::endl;
 
 	GLCall(glEnable(GL_BLEND));
 	GLCall(glEnable(GL_DEPTH_TEST));
@@ -724,38 +821,64 @@ int main (void) {
 
 		tick();
 		handle_events();
-		// delta_time = get_delta_time();
 
-		GLCall(glUseProgram(program));
+		GLCall( glBindVertexArray(bindedObj.vao) );
+		GLCall( glActiveTexture(GL_TEXTURE0) );
+		GLCall( glBindTexture(GL_TEXTURE_2D, objectTextureID) );
+		draw_object(vertices.size(), bindedObj.program);
+		glBindVertexArray(0);
 
-		// glm::mat4 view = lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
-		// glm::mat4 view = glm::eulerAngleYXZ(cameraDir.y, cameraDir.x, cameraDir.z);
-
-		// glm::quat targetOrientation = normalize(LookAt(cameraPos, cameraUp));
-		// gOrientation2 = RotateTowards(gOrientation2, targetOrientation, 1.0f*delta_time);
-		// glm::mat4 view = mat4_cast(gOrientation2);
-
-		glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
-
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
-		glm::mat4 mvp = projection * view * model;
-
-		GLCall(int MVPLocation = glGetUniformLocation(program, "u_MVP"));
-		if (MVPLocation == -1)
-		{
-			fprintf(stderr, "Could not bind uniform %s\n", "u_MVP");
-			return 0;
-		}
-		GLCall(glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, &mvp[0][0]));
-
-		GLCall(glBindVertexArray(va));
-		// GLCall(glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, NULL));
-		GLCall(glDrawArrays(GL_TRIANGLES, 0, vertices.size()));
+		GLCall( glBindVertexArray(cubemapObj.vao) );
+		GLCall( glActiveTexture(GL_TEXTURE0) );
+		GLCall( glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID) );
+		draw_skybox(skyboxVertices.size(), cubemapObj.program);
+		glBindVertexArray(0);
 
 		SDL_GL_SwapWindow(window);
 	}
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 	return (0);
+}
+
+void draw_skybox(unsigned int size, unsigned int program)
+{
+	glm::mat4 view = glm::mat4(glm::mat3(glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp)));
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 100.0f);
+	glm::mat4 mvp = view * projection;
+	// glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
+	// glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
+	// glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
+	// glm::mat4 mvp = projection * view * model;
+
+	GLCall(glDepthFunc(GL_LEQUAL));
+	GLCall(glUseProgram(program));
+	GLCall(int MVPLocation = glGetUniformLocation(program, "u_MVP"));
+	if (MVPLocation == -1)
+	{
+		fprintf(stderr, "Could not bind uniform %s\n", "u_MVP");
+		exit(0);
+	}
+	GLCall(glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, &mvp[0][0]));
+	GLCall(glDrawArrays(GL_TRIANGLES, 0, size));
+	GLCall(glBindVertexArray(0));
+	GLCall(glDepthFunc(GL_LESS));
+}
+
+void draw_object(unsigned int size, unsigned int program)
+{
+	glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
+	glm::mat4 mvp = projection * view * model;
+
+	GLCall(glUseProgram(program));
+	GLCall(int MVPLocation = glGetUniformLocation(program, "u_MVP"));
+	if (MVPLocation == -1)
+	{
+		fprintf(stderr, "Could not bind uniform %s\n", "u_MVP");
+		exit(0);
+	}
+	GLCall(glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, &mvp[0][0]));
+	GLCall(glDrawArrays(GL_TRIANGLES, 0, size));
 }
