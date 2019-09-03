@@ -642,7 +642,6 @@ unsigned int bind_cubemap(std::vector<std::string> textures_faces)
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-	std::cout <<"bind_cubemap "<< textureID << std::endl;
 
 	int width, height, nrChannels;
 	for (GLuint i = 0; i < textures_faces.size(); i++)
@@ -650,12 +649,7 @@ unsigned int bind_cubemap(std::vector<std::string> textures_faces)
 		unsigned char *data = stbi_load(textures_faces[i].c_str(), &width, &height, &nrChannels, 4);
 		if (data)
         {
-			std::cout << textures_faces[i].c_str() <<std::endl;
-			glTexImage2D(
-				GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
-				0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data
-			);
-			std::cout << GL_TEXTURE_CUBE_MAP_POSITIVE_X + i<<std::endl;
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 			stbi_image_free(data);
 		}
 		else
@@ -679,7 +673,6 @@ unsigned int bind_texture(const char *path)
 	unsigned int textureID;
 	GLCall( glGenTextures(1, &textureID) );
 	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
-	std::cout <<"bind_texture "<< textureID << std::endl;
 
 	int m_Width, m_Height, m_BPP;
 	stbi_set_flip_vertically_on_load(1);
@@ -687,10 +680,6 @@ unsigned int bind_texture(const char *path)
 	if (data)
     {
 		GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data) );
-		GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
-		GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
-		GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE) );
-		GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE) );
 		stbi_image_free(data);
 	}
 	else
@@ -698,6 +687,10 @@ unsigned int bind_texture(const char *path)
 		std::cout << "Cubemap texture failed to load at path: " << path << std::endl;
         stbi_image_free(data);
 	}
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE) );
+	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE) );
 	GLCall( glBindTexture(GL_TEXTURE_2D, 0) );
 	return (textureID);
 }
@@ -797,22 +790,20 @@ int main (void) {
 	const char *vinit[] = {
 		"res/models/skybox/right.jpg",
 		"res/models/skybox/left.jpg",
-		"res/models/skybox/top.jpg",
 		"res/models/skybox/bottom.jpg",
+		"res/models/skybox/top.jpg",
+		"res/models/skybox/front.jpg",
 		"res/models/skybox/back.jpg",
-		"res/models/skybox/front.jpg"
 	};
 	std::vector<std::string> textures_faces(vinit, std::end(vinit));
 
 	unsigned int objectTextureID = bind_texture(path);
-	std::cout << objectTextureID << std::endl;
 	unsigned int skyboxTextureID = bind_cubemap(textures_faces);
-	std::cout << skyboxTextureID << std::endl;
 
 	GLCall(glEnable(GL_BLEND));
+	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 	GLCall(glEnable(GL_DEPTH_TEST));
 	GLCall(glDepthFunc(GL_LESS));
-	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
 	while (programIsRunning)
 	{
@@ -822,17 +813,22 @@ int main (void) {
 		tick();
 		handle_events();
 
-		GLCall( glBindVertexArray(bindedObj.vao) );
-		GLCall( glActiveTexture(GL_TEXTURE0) );
-		GLCall( glBindTexture(GL_TEXTURE_2D, objectTextureID) );
-		draw_object(vertices.size(), bindedObj.program);
-		glBindVertexArray(0);
-
+		
+		GLCall(glDisable(GL_DEPTH_TEST));
 		GLCall( glBindVertexArray(cubemapObj.vao) );
 		GLCall( glActiveTexture(GL_TEXTURE0) );
 		GLCall( glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID) );
 		draw_skybox(skyboxVertices.size(), cubemapObj.program);
 		glBindVertexArray(0);
+
+		GLCall(glEnable(GL_DEPTH_TEST));
+		GLCall(glBindVertexArray(bindedObj.vao));
+		GLCall(glActiveTexture(GL_TEXTURE0));
+		GLCall(glBindTexture(GL_TEXTURE_2D, objectTextureID));
+		draw_object(vertices.size(), bindedObj.program);
+		glBindVertexArray(0);
+
+		
 
 		SDL_GL_SwapWindow(window);
 	}
@@ -845,11 +841,7 @@ void draw_skybox(unsigned int size, unsigned int program)
 {
 	glm::mat4 view = glm::mat4(glm::mat3(glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp)));
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 100.0f);
-	glm::mat4 mvp = view * projection;
-	// glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
-	// glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
-	// glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
-	// glm::mat4 mvp = projection * view * model;
+	glm::mat4 mvp = projection * view;
 
 	GLCall(glDepthFunc(GL_LEQUAL));
 	GLCall(glUseProgram(program));
@@ -865,11 +857,13 @@ void draw_skybox(unsigned int size, unsigned int program)
 	GLCall(glDepthFunc(GL_LESS));
 }
 
+glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -0.5, -2.0));
+
 void draw_object(unsigned int size, unsigned int program)
 {
 	glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);	
+	model = glm::rotate(model, delta_time * glm::radians(55.0f), glm::vec3(0.0f, 1.0f, 0.0f)); 
 	glm::mat4 mvp = projection * view * model;
 
 	GLCall(glUseProgram(program));
