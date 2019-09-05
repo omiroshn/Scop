@@ -10,166 +10,17 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-
+#include "scop.h"
 #include "debug.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/quaternion.hpp"
-#include "glm/gtx/quaternion.hpp"
-#include <glm/gtx/euler_angles.hpp>
-
-#include <stdio.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <fstream>
-#include <sstream>
-#include <vector>
-
-#include "ft_math.h"
-
-#define degreesToRadians(angleDegrees) ((angleDegrees) * M_PI / 180.0)
-#define radiansToDegrees(angleRadians) ((angleRadians) * 180.0 / M_PI)
-
-#define get_offset(type, member) ((size_t)(&((type*)(1))->member)-1)
-
-struct Vertex
-{
-	glm::vec4   position;
-	glm::vec3   normal;
-	glm::vec2   texCoords;
-};
-
 int programIsRunning = 1;
+int screen_width = 960, screen_height = 540;
 
-SDL_Window*		InitWindow();
-void			InitGlew(SDL_Window * window);
-
-char		**ft_strsplit(char const *s, char c);
-int			ft_array_length(char const *s, char c);
-char		*ft_strtrim(char const *s);
-void		free_strsplit(char **str);
-
-int screen_width=960, screen_height=540;
-
-static void		print_shader_compilation_info(const char *source, GLuint shader)
-{
-	GLsizei	size;
-	GLchar	log[4096];
-
-	glGetShaderInfoLog(shader, 4096, &size, log);
-	printf("Shader %s\ncompilation log:\n %s\n", source, log);
-}
-
-static GLuint	create_shader(const char *source, GLenum shader_type)
-{
-	GLint	err;
-	GLuint	shader;
-
-	shader = glCreateShader(shader_type);
-	glShaderSource(shader, 1, (const char *const *)&source, 0);
-	glCompileShader(shader);
-	err = GL_FALSE;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &err);
-	if (err == GL_FALSE)
-	{
-		printf("Shader compilation failed.");
-		print_shader_compilation_info(source, shader);
-		glDeleteShader(shader);
-		return (0);
-	}
-	return (shader);
-}
-
-static void		print_link_info(GLuint program)
-{
-	GLsizei	size;
-	GLchar	log[4096];
-
-	printf("Shaders: Link stage failed.");
-	glGetProgramInfoLog(program, 4096, &size, log);
-	printf("Shaders: Program link log:\n %s\n", log);
-}
-
-GLuint			create_program(const char *vert, const char *frag)
-{
-	GLuint	vert_shader;
-	GLuint	frag_shader;
-	GLint	programSuccess;
-	GLuint	program;
-
-	if ((vert_shader = create_shader(vert, GL_VERTEX_SHADER)) == 0 ||
-		(frag_shader = create_shader(frag, GL_FRAGMENT_SHADER)) == 0)
-		return (0);
-	program = glCreateProgram();
-	glAttachShader(program, vert_shader);
-	glAttachShader(program, frag_shader);
-
-	glDeleteShader(vert_shader);
-	glDeleteShader(frag_shader);
-
-	glLinkProgram(program);
-	programSuccess = GL_TRUE;
-	glGetProgramiv(program, GL_LINK_STATUS, &programSuccess);
-	if (programSuccess != GL_TRUE)
-	{
-		print_link_info(program);
-		return (0);
-	}
-	GLCall( glValidateProgram(program) );
-	return (program);
-}
-
-
-int   read_shaders(const char *vertex_path, const char *fragment_path)
-{
-	char    *vertex_str = NULL;
-	char    *fragment_str = NULL;
-	struct  stat st;
-	int     v_size;
-	int     f_size;
-	
-	const int vertex_fd = open(vertex_path, O_RDONLY);
-	const int fragment_fd = open(fragment_path, O_RDONLY);
-	
-	stat(vertex_path, &st);
-	v_size = st.st_size;
-	stat(fragment_path, &st);
-	f_size = st.st_size;
-	
-	vertex_str = (char*)malloc(v_size);
-	if (read(vertex_fd, vertex_str, v_size) < 0) {
-		perror("Shaders: Error in reading:");
-		return (0);
-	}
-	vertex_str[v_size] = '\0';
-	
-	fragment_str = (char*)malloc(f_size);
-	if (read(fragment_fd, fragment_str, f_size) < 0) {
-		perror("Shaders: Error in reading:");
-		return (0);
-	}
-	fragment_str[f_size] = '\0';
-	
-	int program;
-	program = create_program(vertex_str, fragment_str);
-	if (!program)
-	{
-		printf("Failed to read shaders\n");
-		return (0);
-	}
-	free(vertex_str);
-	free(fragment_str);
-	return (program);
-}
-
-# include <stdint.h>
+#include <stdint.h>
+#include <mach/mach_time.h>
 
 uint64_t	start;
 uint64_t	current;
@@ -178,8 +29,6 @@ uint64_t	numer;
 uint64_t	denom;
 float		ttime;
 float		old_time;
-
-#include <mach/mach_time.h>
 
 void		init_timer()
 {
@@ -432,27 +281,6 @@ glm::mat4 lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 upDir)
 	return (matrix);
 }
 
-// glm::mat4 lookAt(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
-// {
-//     glm::vec3 zaxis = normalize(eye - target);    
-//     glm::vec3 xaxis = normalize(cross(up, zaxis));
-//     glm::vec3 yaxis = cross(zaxis, xaxis);     
-
-//     glm::mat4 orientation(
-//        xaxis[0], yaxis[0], zaxis[0], 0,
-//        xaxis[1], yaxis[1], zaxis[1], 0,
-//        xaxis[2], yaxis[2], zaxis[2], 0,
-//          0,       0,       0,     1);
-
-//     glm::mat4 translation(
-//               1,       0,       0, 0,
-//               0,       1,       0, 0, 
-//               0,       0,       1, 0,
-//         -eye[0], -eye[1], -eye[2], 1);
-
-//     return orientation * translation;
-// }
-
 int ft_chrcnt(char *line, char c)
 {
 	int i;
@@ -520,6 +348,9 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices)
 
 	std::vector<GLushort> vertexIndices, uvIndices, normalIndices;
 
+	int vertex_count = 0;
+	int normal_count = 0;
+	int texture_count = 0;
 	int faces_count = 0;
 	std::string line;
 	while (getline(in, line))
@@ -535,6 +366,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices)
 
 			temp_positions.push_back(v);
 			free_strsplit(sub);
+			vertex_count++;
 		}
 		else if (line.substr(0,3) == "vt ")
 		{
@@ -545,6 +377,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices)
 
 			temp_tx.push_back(v);
 			free_strsplit(sub);
+			normal_count++;
 		}
 		else if (line.substr(0,3) == "vn ")
 		{
@@ -556,6 +389,7 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices)
 
 			temp_normals.push_back(v);
 			free_strsplit(sub);
+			texture_count++;
 		}
 		else if (line.substr(0,2) == "f ")
 		{
@@ -576,6 +410,8 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices)
 			free(trimmed);
 		}
 	}
+
+	std::cout << "vertex_count: " << vertex_count << " normal_count: " << normal_count << " texture_count: " << texture_count << " faces_count: " << faces_count << std::endl;
 
 	// if (normalIndices.empty())
 	// {
@@ -622,14 +458,17 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices)
 		for (unsigned int i = 0; i < 3; i += 1)
 		{
 			glm::vec4 vertex = temp_positions[vertexIndices[v + i] - 1];
-			glm::vec3 normal = temp_normals[normalIndices[v + i] - 1];
+			glm::vec3 normal;
+			if (temp_normals.empty())
+				normal = glm::vec3(0.0f,0.0f,0.0f);
+			else
+				normal = temp_normals[normalIndices[v + i] - 1];
 
 			glm::vec2 uv;
-			if (temp_tx.empty()) {
+			if (temp_tx.empty())
 				uv = glm::vec2(0.0f,0.0f);
-			} else {
+			else
 				uv = temp_tx[uvIndices[v + i] - 1];
-			}
 			
 			Vertex ver = {vertex, normal, uv};
 			vertices.push_back(ver);
@@ -675,7 +514,6 @@ unsigned int bind_texture(const char *path)
 	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
 
 	int m_Width, m_Height, m_BPP;
-	stbi_set_flip_vertically_on_load(1);
 	unsigned char* data = stbi_load(path, &m_Width, &m_Height, &m_BPP, 4);
 	if (data)
     {
@@ -694,15 +532,6 @@ unsigned int bind_texture(const char *path)
 	GLCall( glBindTexture(GL_TEXTURE_2D, 0) );
 	return (textureID);
 }
-
-struct Binded
-{
-	unsigned int vao;
-	unsigned int program;
-};
-
-void draw_object(unsigned int size, unsigned int program);
-void draw_skybox(unsigned int size, unsigned int program);
 
 Binded set_up_object(std::vector<Vertex> vertices)
 {
@@ -782,7 +611,6 @@ int main (void) {
 	load_obj("res/models/cube/newCube.obj", skyboxVertices);
 	Binded cubemapObj = set_up_skybox(skyboxVertices);
 
-	// const char *path = "res/models/cube/ramsey.jpg";
 	// const char *path = "res/models/Notebook/textures/Lowpoly_Laptop_2.jpg";
 	// const char *path = "res/models/cat/Cat_diffuse.jpg";
 	// const char *path = "res/models/earth/4096_earth.jpg";
@@ -841,38 +669,30 @@ void draw_skybox(unsigned int size, unsigned int program)
 {
 	glm::mat4 view = glm::mat4(glm::mat3(glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp)));
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 100.0f);
-	glm::mat4 mvp = projection * view;
 
 	GLCall(glDepthFunc(GL_LEQUAL));
-	GLCall(glUseProgram(program));
-	GLCall(int MVPLocation = glGetUniformLocation(program, "u_MVP"));
-	if (MVPLocation == -1)
-	{
-		fprintf(stderr, "Could not bind uniform %s\n", "u_MVP");
-		exit(0);
-	}
-	GLCall(glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, &mvp[0][0]));
+	setMat4(program, "projection", projection);
+	setMat4(program, "view", view);
 	GLCall(glDrawArrays(GL_TRIANGLES, 0, size));
 	GLCall(glBindVertexArray(0));
 	GLCall(glDepthFunc(GL_LESS));
 }
 
-glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -0.5, -2.0));
+glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -0.5, -3.0));
+glm::vec3 lightPos = glm::vec3(0.0,0.0,0.0);
 
 void draw_object(unsigned int size, unsigned int program)
 {
 	glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);	
-	model = glm::rotate(model, delta_time * glm::radians(55.0f), glm::vec3(0.0f, 1.0f, 0.0f)); 
-	glm::mat4 mvp = projection * view * model;
+	// model = glm::rotate(model, delta_time * glm::radians(55.0f), glm::vec3(0.0f, 1.0f, 0.0f)); 
 
-	GLCall(glUseProgram(program));
-	GLCall(int MVPLocation = glGetUniformLocation(program, "u_MVP"));
-	if (MVPLocation == -1)
-	{
-		fprintf(stderr, "Could not bind uniform %s\n", "u_MVP");
-		exit(0);
-	}
-	GLCall(glUniformMatrix4fv(MVPLocation, 1, GL_FALSE, &mvp[0][0]));
+	setMat4(program, "projection", projection);
+	setMat4(program, "view", view);
+	setMat4(program, "model", model);
+	setVec3(program, "lightPos", lightPos);
+	setVec3(program, "viewPos", cameraPos);
+
 	GLCall(glDrawArrays(GL_TRIANGLES, 0, size));
+	GLCall(glBindVertexArray(0));
 }

@@ -1,9 +1,10 @@
 #version 330 core
-out vec4 color;
+
+uniform samplerCube cubemap;
 
 in vec3 textureCoord;
 
-uniform samplerCube cubemap;
+out vec4 color;
 
 void main()
 {             

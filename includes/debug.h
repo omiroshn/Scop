@@ -13,12 +13,12 @@
     x;\
     ASSERT(GLCheckError())
 
-void GLClearError()
+inline void GLClearError()
 {
     while (glGetError() != GL_NO_ERROR);
 }
 
-bool GLCheckError()
+inline bool GLCheckError()
 {
     while (GLenum error = glGetError())
     {

@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
+#include "stb_image.h"
 
 void InitGlew(SDL_Window * window)
 {
@@ -43,5 +44,6 @@ SDL_Window* InitWindow()
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 	SDL_GL_SetSwapInterval(1);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
+	stbi_set_flip_vertically_on_load(1);
 	return (window);
 }

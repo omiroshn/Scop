@@ -1,12 +1,14 @@
 #version 330 core
-layout (location = 0) in vec4 v_coord;
+
+layout (location = 0) in vec4 aPos;
+
+uniform mat4 projection;
+uniform mat4 view;
 
 out vec3 textureCoord;
 
-uniform mat4 u_MVP;
-
 void main()
 {
-    textureCoord = normalize( v_coord.xyz );
-    gl_Position = u_MVP * v_coord;
+    textureCoord = normalize(aPos.xyz);
+    gl_Position = projection * view * aPos;
 }
