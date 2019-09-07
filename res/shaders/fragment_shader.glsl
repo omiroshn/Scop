@@ -34,4 +34,10 @@ void main()
 
 	vec3 result = (ambient + diffuse + specular) * texColor.xyz;
 	color = vec4(result, 1.0);
+	color = vec4(Normal, 1.0);
+
+	//grey
+	float grey = (Normal.x + Normal.y+ Normal.z) / 3.0;
+	vec3 g = vec3(grey, grey, grey);
+	color = vec4(g, 1.0);
 }

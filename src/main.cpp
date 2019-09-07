@@ -412,45 +412,6 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices)
 	}
 
 	std::cout << "vertex_count: " << vertex_count << " normal_count: " << normal_count << " texture_count: " << texture_count << " faces_count: " << faces_count << std::endl;
-
-	// if (normalIndices.empty())
-	// {
-	// 	printf("No normals (VN) found. Generation own normals.\n");
-	// 	// normals.resize(positions.size(), glm::vec3(0.0,0.0,0.0));
-	// 	for (int i = 0; i < vertexIndices.size(); i+=3)
-	// 	{
-	// 		GLushort ia, ib, ic;
-	// 		std::cout << vertexIndices[i] << std::endl;
-	// 		ia = vertexIndices[i];
-	// 		ib = vertexIndices[i+1];
-	// 		ic = vertexIndices[i+2];
-	// 		// glm::vec3 normal = glm::normalize(glm::cross(
-	// 		// 	glm::vec3(positions[ib]) - glm::vec3(positions[ia]),
-	// 		// 	glm::vec3(positions[ic]) - glm::vec3(positions[ia])
-	// 		// ));
-	// 		// normals[ia] = normals[ib] = normals[ic] = normal;
-	// 	}
-	// }
-	
-	// if (tx.empty())
-	// {
-	// 	printf("No texture coordinates (VT) found.\n");
-	// 	glm::vec2 text(0.0f,0.0f);
-	// 	for (int i = 0; i < elements.size(); i++)
-	// 	{
-	// 		Vertex v = {positions[i], normals[i], text};
-	// 		vertices.push_back(v);
-	// 	}
-	// }
-	// else
-	// {
-	// 	for (int i = 0; i < elements.size(); i++)
-	// 	{
-	// 		Vertex v = {positions[i], normals[i], tx[i]};
-	// 		vertices.push_back(v);
-	// 	}
-	// }
-
 	std::cout << "Size: " << vertexIndices.size() << std::endl;
 
 	for (int v = 0; v < vertexIndices.size(); v += 3)
@@ -460,7 +421,11 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices)
 			glm::vec4 vertex = temp_positions[vertexIndices[v + i] - 1];
 			glm::vec3 normal;
 			if (temp_normals.empty())
-				normal = glm::vec3(0.0f,0.0f,0.0f);
+			{
+				normal.x = (temp_positions[vertexIndices[v + i] - 1].x + 1.2)/2.4;
+				normal.y = (temp_positions[vertexIndices[v + i] - 1].y + 1.2)/2.4;
+				normal.z = (temp_positions[vertexIndices[v + i] - 1].z + 1.2)/2.4;
+			}
 			else
 				normal = temp_normals[normalIndices[v + i] - 1];
 
@@ -595,10 +560,10 @@ int main (void) {
 	std::vector<Vertex> vertices;
 	// load_obj("res/models/cube/newCube.obj", vertices);
 	// load_obj("res/models/cube/cube.obj", vertices);
-	// load_obj("res/models/tree/lowpolytree.obj", vertices);
+	load_obj("res/models/tree/lowpolytree.obj", vertices);
 	// load_obj("res/models/cat/12221_Cat_v1_l3.obj", vertices);
 	// load_obj("res/models/earth/earth.obj", vertices);
-	load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices);
+	// load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices);
 	// load_obj("res/models/Notebook/Lowpoly_Notebook_2.obj", vertices);
 	// load_obj("res/models/plant/plant.obj", vertices);
 	// load_obj("res/models/42/42.obj", vertices);
@@ -611,10 +576,10 @@ int main (void) {
 	load_obj("res/models/cube/newCube.obj", skyboxVertices);
 	Binded cubemapObj = set_up_skybox(skyboxVertices);
 
-	// const char *path = "res/models/Notebook/textures/Lowpoly_Laptop_2.jpg";
+	const char *path = "res/models/Notebook/textures/Lowpoly_Laptop_2.jpg";
 	// const char *path = "res/models/cat/Cat_diffuse.jpg";
 	// const char *path = "res/models/earth/4096_earth.jpg";
-	const char* path = "res/models/penguin/Penguin_Diffuse_Color.png";
+	// const char* path = "res/models/penguin/Penguin_Diffuse_Color.png";
 	const char *vinit[] = {
 		"res/models/skybox/right.jpg",
 		"res/models/skybox/left.jpg",
