@@ -18,6 +18,8 @@
 
 int programIsRunning = 1;
 int screen_width = 960, screen_height = 540;
+int space_pressed = 1;
+
 
 #include <stdint.h>
 #include <mach/mach_time.h>
@@ -172,6 +174,13 @@ void handle_events()
 		cameraPos -= cameraUp * cameraSpeed;
 	if (keyStates[SDL_SCANCODE_E])
 		cameraPos += cameraUp * cameraSpeed;
+
+	if (keyStates[SDL_SCANCODE_SPACE])
+	{
+		std::cout << "s" << std::endl;
+		space_pressed ^= 1;
+	}
+		
 
 	// if (keyStates[SDL_SCANCODE_LEFT])
 	// {
@@ -451,16 +460,7 @@ unsigned int bind_cubemap(std::vector<std::string> textures_faces)
 	for (GLuint i = 0; i < textures_faces.size(); i++)
 	{
 		unsigned char *data = stbi_load(textures_faces[i].c_str(), &width, &height, &nrChannels, 4);
-		if (data)
-        {
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-			stbi_image_free(data);
-		}
-		else
-        {
-            std::cout << "Cubemap texture failed to load at path: " << textures_faces[i] << std::endl;
-            stbi_image_free(data);
-        }
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	}
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -480,16 +480,8 @@ unsigned int bind_texture(const char *path)
 
 	int m_Width, m_Height, m_BPP;
 	unsigned char* data = stbi_load(path, &m_Width, &m_Height, &m_BPP, 4);
-	if (data)
-    {
-		GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data) );
-		stbi_image_free(data);
-	}
-	else
-	{
-		std::cout << "Cubemap texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-	}
+	GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data) );
+	
 	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
 	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
 	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE) );
@@ -506,8 +498,6 @@ Binded set_up_object(std::vector<Vertex> vertices)
 	GLCall( glBindVertexArray(vao) );
 	GLCall( glBindBuffer(GL_ARRAY_BUFFER, vbo) );
 	GLCall( glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW) );
-	if (vbo == 0)
-		std::cout << "vbo " << vbo << std::endl;
 
 	GLCall( glEnableVertexAttribArray(0) );
 	GLCall( glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, position) ));
@@ -560,10 +550,11 @@ int main (void) {
 	std::vector<Vertex> vertices;
 	// load_obj("res/models/cube/newCube.obj", vertices);
 	// load_obj("res/models/cube/cube.obj", vertices);
-	load_obj("res/models/tree/lowpolytree.obj", vertices);
+	// load_obj("res/models/tree/lowpolytree.obj", vertices);
+	// load_obj("res/models/pewdiepie/pewdiepie.obj", vertices);
 	// load_obj("res/models/cat/12221_Cat_v1_l3.obj", vertices);
 	// load_obj("res/models/earth/earth.obj", vertices);
-	// load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices);
+	load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices);
 	// load_obj("res/models/Notebook/Lowpoly_Notebook_2.obj", vertices);
 	// load_obj("res/models/plant/plant.obj", vertices);
 	// load_obj("res/models/42/42.obj", vertices);
@@ -576,10 +567,11 @@ int main (void) {
 	load_obj("res/models/cube/newCube.obj", skyboxVertices);
 	Binded cubemapObj = set_up_skybox(skyboxVertices);
 
-	const char *path = "res/models/Notebook/textures/Lowpoly_Laptop_2.jpg";
+	// const char *path = "res/models/Notebook/textures/Lowpoly_Laptop_2.jpg";
+	// const char *path = "res/models/pewdiepie/red_glass.JPG";
 	// const char *path = "res/models/cat/Cat_diffuse.jpg";
 	// const char *path = "res/models/earth/4096_earth.jpg";
-	// const char* path = "res/models/penguin/Penguin_Diffuse_Color.png";
+	const char* path = "res/models/penguin/Penguin_Diffuse_Color.png";
 	const char *vinit[] = {
 		"res/models/skybox/right.jpg",
 		"res/models/skybox/left.jpg",
@@ -588,6 +580,22 @@ int main (void) {
 		"res/models/skybox/front.jpg",
 		"res/models/skybox/back.jpg",
 	};
+	// const char *vinit[] = {
+	// 	"res/models/skybox2/siege_lf.tga",
+	// 	"res/models/skybox2/siege_rt.tga",
+	// 	"res/models/skybox2/siege_dn.tga",
+	// 	"res/models/skybox2/siege_up.tga",
+	// 	"res/models/skybox2/siege_ft.tga",
+	// 	"res/models/skybox2/siege_bk.tga",
+	// };
+	// const char *vinit[] = {
+	// 	"res/models/skybox3/darkskies_lf.tga",
+	// 	"res/models/skybox3/darkskies_rt.tga",
+	// 	"res/models/skybox3/darkskies_dn.tga",
+	// 	"res/models/skybox3/darkskies_up.tga",
+	// 	"res/models/skybox3/darkskies_ft.tga",
+	// 	"res/models/skybox3/darkskies_bk.tga",
+	// };
 	std::vector<std::string> textures_faces(vinit, std::end(vinit));
 
 	unsigned int objectTextureID = bind_texture(path);
@@ -605,14 +613,19 @@ int main (void) {
 
 		tick();
 		handle_events();
-
 		
+		GLCall(glCullFace(GL_FRONT));
+
 		GLCall(glDisable(GL_DEPTH_TEST));
 		GLCall( glBindVertexArray(cubemapObj.vao) );
 		GLCall( glActiveTexture(GL_TEXTURE0) );
 		GLCall( glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID) );
 		draw_skybox(skyboxVertices.size(), cubemapObj.program);
 		glBindVertexArray(0);
+
+		GLCall(glEnable(GL_CULL_FACE));
+		GLCall(glCullFace(GL_BACK));
+		
 
 		GLCall(glEnable(GL_DEPTH_TEST));
 		GLCall(glBindVertexArray(bindedObj.vao));
@@ -649,8 +662,9 @@ glm::vec3 lightPos = glm::vec3(0.0,0.0,0.0);
 void draw_object(unsigned int size, unsigned int program)
 {
 	glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);	
-	// model = glm::rotate(model, delta_time * glm::radians(55.0f), glm::vec3(0.0f, 1.0f, 0.0f)); 
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
+	if (space_pressed)
+		model = glm::rotate(model, delta_time * glm::radians(55.0f), glm::vec3(0.0f, 1.0f, 0.0f)); 
 
 	setMat4(program, "projection", projection);
 	setMat4(program, "view", view);

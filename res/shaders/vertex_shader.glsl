@@ -1,4 +1,4 @@
-#version 330 core
+#version 400 core
 
 layout (location = 0) in vec4 aPos;
 layout (location = 1) in vec3 aNormal;
@@ -17,6 +17,6 @@ void main()
 	gl_Position = projection * view * model * aPos;
 	FragPos = vec3(model * aPos);
 	TexCoord = aTexCoord;
-	// Normal = mat3(transpose(inverse(model))) * aNormal;
-	Normal = aNormal;
+	Normal = mat3(transpose(inverse(model))) * aNormal;
+	// Normal = aNormal;
 }

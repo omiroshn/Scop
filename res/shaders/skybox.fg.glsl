@@ -1,12 +1,10 @@
-#version 330 core
+#version 400 core
+
+in vec3 textureCoord;
+out vec4 color;
 
 uniform samplerCube cubemap;
 
-in vec3 textureCoord;
-
-out vec4 color;
-
-void main()
-{             
+void main() {             
     color = texture(cubemap, -textureCoord);
 }
