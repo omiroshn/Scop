@@ -64,5 +64,6 @@ void draw_skybox(unsigned int size, unsigned int program);
 
 void setMat4(unsigned int program, const char *name, glm::mat4 matrix);
 void setVec3(unsigned int program, const char *name, glm::vec3 vector);
+void setInt1(unsigned int program, const char *name, int value);
 
 #endif

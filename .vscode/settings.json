@@ -61,6 +61,7 @@
         "unordered_map": "cpp",
         "*.tcc": "cpp",
         "cinttypes": "cpp",
-        "hashtable": "cpp"
+        "hashtable": "cpp",
+        "__memory": "cpp"
     }
 }

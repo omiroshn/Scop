@@ -35,3 +35,15 @@ void setMat4(unsigned int program, const char *name, glm::mat4 matrix)
 	}
 	GLCall(glUniformMatrix4fv(location, 1, GL_FALSE, &matrix[0][0]));
 }
+
+void setInt1(unsigned int program, const char *name, int value)
+{
+	GLCall(glUseProgram(program));
+	GLCall(int location = glGetUniformLocation(program, name));
+	if (location == -1)
+	{
+		fprintf(stderr, "Could not bind uniform %s\n", name);
+		exit(0);
+	}
+	GLCall(glUniform1i(location, value));
+}
