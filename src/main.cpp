@@ -104,7 +104,24 @@ void handle_events()
 		if (e.type == SDL_QUIT || (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_ESCAPE))
 			programIsRunning = 0;
 		else if (e.type == SDL_KEYDOWN)
+		{
 			keyStates[e.key.keysym.scancode] = true;
+			if (e.key.keysym.scancode == SDL_SCANCODE_LEFTBRACKET)
+			{
+				mode -= 1;
+				if (mode < 1)
+					mode = 3;
+			}
+			if (e.key.keysym.scancode == SDL_SCANCODE_RIGHTBRACKET)
+			{
+				mode += 1;
+				if (mode > 3)
+					mode = 1;
+			}
+
+			if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
+				space_pressed ^= 1;
+		}
 		else if (e.type == SDL_KEYUP)
 			keyStates[e.key.keysym.scancode] = false;
 		else if (e.type == SDL_MOUSEMOTION)
@@ -194,22 +211,6 @@ void handle_events()
 		lightPos += cameraUp * cameraSpeed;
 	if (keyStates[SDL_SCANCODE_P])
 		lightPos -= cameraUp * cameraSpeed;
-
-	if (keyStates[SDL_SCANCODE_LEFTBRACKET])
-	{
-		mode -= 1;
-		if (mode < 1)
-			mode = 3;
-	}
-	if (keyStates[SDL_SCANCODE_RIGHTBRACKET])
-	{
-		mode += 1;
-		if (mode > 3)
-			mode = 1;
-	}
-
-	if (keyStates[SDL_SCANCODE_SPACE])
-		space_pressed ^= 1;
 		
 
 	// if (keyStates[SDL_SCANCODE_LEFT])
