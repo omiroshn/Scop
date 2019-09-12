@@ -61,7 +61,7 @@ void		tick()
 
 bool mRightButtonPressed = false;
 
-glm::vec3 cameraPos(0.0f, 0.0f, 4.0f);
+glm::vec3 cameraPos(0.0f, -4.0f, 15.0f);
 glm::vec3 cameraDir(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraRight(-1.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp(0.0f, -1.0f, 0.0f);
@@ -69,6 +69,9 @@ glm::vec3 cameraUp(0.0f, -1.0f, 0.0f);
 glm::vec3 mWorldUp(0.0f, 1.0f, 0.0f);
 glm::vec3 mWorldRight(1.0f, 0.0f, 0.0f);
 glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
+
+// glm::vec3 lightPos = glm::vec3(0.2, -1.0, 0.3);
+glm::vec3 lightPos = glm::vec3(0.0,-10.0,0.0);
 
 bool* keyStates = new bool[256];
 
@@ -163,6 +166,7 @@ void handle_events()
 
 	float cameraSpeed = delta_time * 5.f;
 
+	/* camera movement */
 	if (keyStates[SDL_SCANCODE_W])
 		cameraPos += cameraDir * cameraSpeed;
 	if (keyStates[SDL_SCANCODE_S])
@@ -176,11 +180,22 @@ void handle_events()
 	if (keyStates[SDL_SCANCODE_E])
 		cameraPos += cameraUp * cameraSpeed;
 
+	/* light movement */
+	if (keyStates[SDL_SCANCODE_UP])
+		lightPos += cameraDir * cameraSpeed;
+	if (keyStates[SDL_SCANCODE_DOWN])
+		lightPos -= cameraDir * cameraSpeed;
+	if (keyStates[SDL_SCANCODE_RIGHT])
+		lightPos += cameraRight * cameraSpeed;
+	if (keyStates[SDL_SCANCODE_LEFT])
+		lightPos -= cameraRight * cameraSpeed;
+	if (keyStates[SDL_SCANCODE_O])
+		lightPos += cameraUp * cameraSpeed;
+	if (keyStates[SDL_SCANCODE_P])
+		lightPos -= cameraUp * cameraSpeed;
+
 	if (keyStates[SDL_SCANCODE_SPACE])
-	{
-		std::cout << "s" << std::endl;
 		space_pressed ^= 1;
-	}
 		
 
 	// if (keyStates[SDL_SCANCODE_LEFT])
@@ -541,7 +556,7 @@ Binded set_up_skybox(std::vector<Vertex> vertices)
 	return (Binded){vao, program};
 }
 
-glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 1.5, -4.0));
+glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, 0.0));
 
 int main (void) {
 
@@ -562,12 +577,15 @@ int main (void) {
 	// load_obj("res/models/cat/12221_Cat_v1_l3.obj", vertices);
 	// load_obj("res/models/earth/earth.obj", vertices);
 	// load_obj("res/models/penguin/PenguinBaseMesh.obj", vertices);
-	load_obj("res/models/dragon/dragon.obj", vertices);
 	// load_obj("res/models/Notebook/Lowpoly_Notebook_2.obj", vertices);
 	// load_obj("res/models/plant/plant.obj", vertices);
 	// load_obj("res/models/42/42.obj", vertices);
 	// load_obj("res/models/teapot/teapot.obj", vertices);
 	// load_obj("res/models/teapot/teapot2.obj", vertices);
+
+	load_obj("res/models/dragon/dragon.obj", vertices);
+	// load_obj("res/models/dragon/meta.obj", vertices);
+	// load_obj("res/models/dragon/tea.obj", vertices);
 
 	Binded bindedObj = set_up_object(vertices);
 
@@ -575,9 +593,12 @@ int main (void) {
 	load_obj("res/models/cube/newCube.obj", skyboxVertices);
 	Binded cubemapObj = set_up_skybox(skyboxVertices);
 
-	// const char *path = "res/models/Notebook/textures/Lowpoly_Laptop_2.jpg";
-	// const char *path = "res/models/dragon/tea.png";
 	const char *path = "res/models/dragon/dragon.png";
+	// const char *path = "res/models/dragon/tea.png";
+	// const char *path = "res/models/dragon/meta.png";
+
+
+	// const char *path = "res/models/Notebook/textures/Lowpoly_Laptop_2.jpg";
 	// const char *path = "res/models/cat/Cat_diffuse.jpg";
 	// const char *path = "res/models/earth/4096_earth.jpg";
 	// const char* path = "res/models/penguin/Penguin_Diffuse_Color.png";
@@ -629,8 +650,8 @@ int main (void) {
 	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	setInt1(cubemapObj.program, "cubemap", 0);
-	setInt1(bindedObj.program, "TextureSampler", 0);
-	setInt1(bindedObj.program, "enviroMap", 1);
+	setInt1(bindedObj.program, "textureSampler", 0);
+	// setInt1(bindedObj.program, "enviroMap", 1);
 
 	GLCall(glEnable(GL_BLEND));
 	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -657,7 +678,6 @@ int main (void) {
 		// GLCall(glEnable(GL_CULL_FACE));
 		// GLCall(glCullFace(GL_BACK));
 		
-
 		GLCall(glEnable(GL_DEPTH_TEST));
 		GLCall(glBindVertexArray(bindedObj.vao));
 		GLCall(glActiveTexture(GL_TEXTURE0));
@@ -666,8 +686,6 @@ int main (void) {
 		GLCall(glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID) );
 		draw_object(vertices.size(), bindedObj.program);
 		glBindVertexArray(0);
-
-		
 
 		SDL_GL_SwapWindow(window);
 	}
@@ -689,8 +707,6 @@ void draw_skybox(unsigned int size, unsigned int program)
 	GLCall(glDepthFunc(GL_LESS));
 }
 
-glm::vec3 lightPos = glm::vec3(0.2, -1.0, 0.3);
-
 void draw_object(unsigned int size, unsigned int program)
 {
 	glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
@@ -701,7 +717,7 @@ void draw_object(unsigned int size, unsigned int program)
 	setMat4(program, "projection", projection);
 	setMat4(program, "view", view);
 	setMat4(program, "model", model);
-	// setVec3(program, "lightPos", lightPos);
+	setVec3(program, "lightPos", lightPos);
 	// setVec3(program, "cameraPos", cameraPos);
 
 	GLCall(glDrawArrays(GL_TRIANGLES, 0, size));
