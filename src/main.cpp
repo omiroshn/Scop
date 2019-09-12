@@ -74,6 +74,7 @@ glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
 glm::vec3 lightPos = glm::vec3(0.0,-10.0,0.0);
 
 bool* keyStates = new bool[256];
+int mode = 1;
 
 void initKeys(bool *keyStates)
 {
@@ -193,6 +194,19 @@ void handle_events()
 		lightPos += cameraUp * cameraSpeed;
 	if (keyStates[SDL_SCANCODE_P])
 		lightPos -= cameraUp * cameraSpeed;
+
+	if (keyStates[SDL_SCANCODE_LEFTBRACKET])
+	{
+		mode -= 1;
+		if (mode < 1)
+			mode = 3;
+	}
+	if (keyStates[SDL_SCANCODE_RIGHTBRACKET])
+	{
+		mode += 1;
+		if (mode > 3)
+			mode = 1;
+	}
 
 	if (keyStates[SDL_SCANCODE_SPACE])
 		space_pressed ^= 1;
@@ -583,8 +597,8 @@ int main (void) {
 	// load_obj("res/models/teapot/teapot.obj", vertices);
 	// load_obj("res/models/teapot/teapot2.obj", vertices);
 
-	load_obj("res/models/dragon/dragon.obj", vertices);
-	// load_obj("res/models/dragon/meta.obj", vertices);
+	// load_obj("res/models/dragon/dragon.obj", vertices);
+	load_obj("res/models/dragon/meta.obj", vertices);
 	// load_obj("res/models/dragon/tea.obj", vertices);
 
 	Binded bindedObj = set_up_object(vertices);
@@ -593,15 +607,16 @@ int main (void) {
 	load_obj("res/models/cube/newCube.obj", skyboxVertices);
 	Binded cubemapObj = set_up_skybox(skyboxVertices);
 
-	const char *path = "res/models/dragon/dragon.png";
+	// const char *path = "res/models/dragon/dragon.png";
+	const char *path = "res/models/dragon/meta.png";
 	// const char *path = "res/models/dragon/tea.png";
-	// const char *path = "res/models/dragon/meta.png";
-
 
 	// const char *path = "res/models/Notebook/textures/Lowpoly_Laptop_2.jpg";
 	// const char *path = "res/models/cat/Cat_diffuse.jpg";
 	// const char *path = "res/models/earth/4096_earth.jpg";
 	// const char* path = "res/models/penguin/Penguin_Diffuse_Color.png";
+
+
 	// const char *vinit[] = {
 	// 	"res/models/skybox/right.jpg",
 	// 	"res/models/skybox/left.jpg",
@@ -635,12 +650,12 @@ int main (void) {
 	// 	"res/models/blue/back.png",
 	// };
 	const char *vinit[] = {
-		"res/models/Yokohama2/posx.jpg",
-		"res/models/Yokohama2/negx.jpg",
-		"res/models/Yokohama2/posy.jpg",
-		"res/models/Yokohama2/negy.jpg",
-		"res/models/Yokohama2/posz.jpg",
-		"res/models/Yokohama2/negz.jpg",
+		"res/models/Yokohama/posx.jpg",
+		"res/models/Yokohama/negx.jpg",
+		"res/models/Yokohama/posy.jpg",
+		"res/models/Yokohama/negy.jpg",
+		"res/models/Yokohama/posz.jpg",
+		"res/models/Yokohama/negz.jpg",
 	};
 	std::vector<std::string> textures_faces(vinit, std::end(vinit));
 
@@ -651,7 +666,7 @@ int main (void) {
 
 	setInt1(cubemapObj.program, "cubemap", 0);
 	setInt1(bindedObj.program, "textureSampler", 0);
-	// setInt1(bindedObj.program, "enviroMap", 1);
+	setInt1(bindedObj.program, "enviroMap", 1);
 
 	GLCall(glEnable(GL_BLEND));
 	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -719,6 +734,7 @@ void draw_object(unsigned int size, unsigned int program)
 	setMat4(program, "model", model);
 	setVec3(program, "lightPos", lightPos);
 	// setVec3(program, "cameraPos", cameraPos);
+	setInt1(program, "mode", mode);
 
 	GLCall(glDrawArrays(GL_TRIANGLES, 0, size));
 	GLCall(glBindVertexArray(0));
