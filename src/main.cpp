@@ -475,66 +475,77 @@ void load_obj(const char *filename, std::vector<Vertex> &vertices)
 	}
 }
 
-unsigned int bind_cubemap(std::vector<std::string> textures_faces)
+unsigned int bind_cubemap(std::vector<std::string> cubemap_faces)
 {
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-	GLCall( glActiveTexture(GL_TEXTURE0 + 1) );
-	GLCall( glBindTexture(GL_TEXTURE_CUBE_MAP, textureID));
+	unsigned int	texture_id;
+	int				m_w;
+	int				m_h;
+	int				m_bpp;
+	unsigned char	*data;
+
+	GLCall(glGenTextures(1, &texture_id));
+	GLCall(glActiveTexture(GL_TEXTURE0 + 1));
+	GLCall(glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id));
 	stbi_set_flip_vertically_on_load(0);
-
-	int width, height, nrChannels;
-	for (GLuint i = 0; i < textures_faces.size(); i++)
+	for (GLuint i = 0; i < cubemap_faces.size(); i++)
 	{
-		unsigned char *data = stbi_load(textures_faces[i].c_str(), &width, &height, &nrChannels, 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		data = stbi_load(cubemap_faces[i].c_str(), &m_w, &m_h, &m_bpp, 4);
+		GLCall(glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+			GL_RGBA, m_w, m_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));
 	}
-
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-	return (textureID);
+	GLCall(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	GLCall(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+	GLCall(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+	GLCall(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+	GLCall(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+	GLCall(glBindTexture(GL_TEXTURE_CUBE_MAP, 0));
+	return (texture_id);
 }
 
 unsigned int bind_texture(const char *path)
 {
-	unsigned int textureID;
-	GLCall( glGenTextures(1, &textureID) );
-	GLCall( glActiveTexture(GL_TEXTURE0) );
-	GLCall( glBindTexture(GL_TEXTURE_2D, textureID) );
+	unsigned int	texture_id;
+	int				m_w;
+	int				m_h;
+	int				m_bpp;
+	unsigned char	*data;
 
-	int m_Width, m_Height, m_BPP;
 	stbi_set_flip_vertically_on_load(1);
-	unsigned char* data = stbi_load(path, &m_Width, &m_Height, &m_BPP, 4);
-	GLCall( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data) );
-	
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) );
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) );
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE) );
-	GLCall( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE) );
-	GLCall( glBindTexture(GL_TEXTURE_2D, 0) );
-	return (textureID);
+	GLCall(glGenTextures(1, &texture_id));
+	GLCall(glActiveTexture(GL_TEXTURE0));
+	GLCall(glBindTexture(GL_TEXTURE_2D, texture_id));
+	data = stbi_load(path, &m_w, &m_h, &m_bpp, 4);
+	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_w, m_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data) );
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+	GLCall(glBindTexture(GL_TEXTURE_2D, 0));
+	return (texture_id);
 }
 
 Binded set_up_object(std::vector<Vertex> vertices)
 {
-	unsigned int vao, vbo;
-	GLCall( glGenVertexArrays(1, &vao) );
-	GLCall( glGenBuffers(1, &vbo) );
-	GLCall( glBindVertexArray(vao) );
-	GLCall( glBindBuffer(GL_ARRAY_BUFFER, vbo) );
-	GLCall( glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW) );
+	unsigned int vao;
+	unsigned int vbo;
+	unsigned int program;
 
-	GLCall( glEnableVertexAttribArray(0) );
-	GLCall( glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, position) ));
-	GLCall( glEnableVertexAttribArray(1) );
-	GLCall( glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, normal) ));
-	GLCall( glEnableVertexAttribArray(2) );
-	GLCall( glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, texCoords) ));
-	unsigned int program = read_shaders(
+	GLCall(glGenVertexArrays(1, &vao));
+	GLCall(glGenBuffers(1, &vbo));
+	GLCall(glBindVertexArray(vao));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),
+			&vertices[0], GL_STATIC_DRAW));
+	GLCall(glEnableVertexAttribArray(0));
+	GLCall(glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE,
+			sizeof(Vertex), (void*)get_offset(Vertex, position)));
+	GLCall(glEnableVertexAttribArray(1));
+	GLCall(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+			sizeof(Vertex), (void*)get_offset(Vertex, normal)));
+	GLCall(glEnableVertexAttribArray(2));
+	GLCall(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+			sizeof(Vertex), (void*)get_offset(Vertex, texCoords)));
+	program = read_shaders(
 		"res/shaders/vertex_shader.glsl",
 		"res/shaders/fragment_shader.glsl");
 	if (!program) {
@@ -546,16 +557,20 @@ Binded set_up_object(std::vector<Vertex> vertices)
 
 Binded set_up_skybox(std::vector<Vertex> vertices)
 {
-	unsigned int vao, vbo;
-	GLCall( glGenVertexArrays(1, &vao) );
-	GLCall( glGenBuffers(1, &vbo) );
-	GLCall( glBindVertexArray(vao) );
-	GLCall( glBindBuffer(GL_ARRAY_BUFFER, vbo) );
-	GLCall( glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW) );
+	unsigned int vao;
+	unsigned int vbo;
+	unsigned int program;
 
-	GLCall( glEnableVertexAttribArray(0) );
-	GLCall( glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)get_offset(Vertex, position) ));
-	unsigned int program = read_shaders(
+	GLCall(glGenVertexArrays(1, &vao));
+	GLCall(glGenBuffers(1, &vbo));
+	GLCall(glBindVertexArray(vao));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),
+			&vertices[0], GL_STATIC_DRAW));
+	GLCall(glEnableVertexAttribArray(0));
+	GLCall(glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE,
+			sizeof(Vertex), (void*)get_offset(Vertex, position)));
+	program = read_shaders(
 		"res/shaders/skybox.vt.glsl",
 		"res/shaders/skybox.fg.glsl");
 	if (!program) {

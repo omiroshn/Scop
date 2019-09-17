@@ -65,10 +65,8 @@ GLuint			create_program(const char *vert, const char *frag)
 	program = glCreateProgram();
 	glAttachShader(program, vert_shader);
 	glAttachShader(program, frag_shader);
-
 	glDeleteShader(vert_shader);
 	glDeleteShader(frag_shader);
-
 	glLinkProgram(program);
 	programSuccess = GL_TRUE;
 	glGetProgramiv(program, GL_LINK_STATUS, &programSuccess);
