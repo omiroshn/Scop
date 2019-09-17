@@ -21,6 +21,8 @@ uniform mat4 model;
 uniform vec3 cameraPosition;
 uniform vec3 lightPos;
 
+uniform int mode;
+
 void main()
 {
 	mat4 MVP = projection * view * model;
@@ -38,7 +40,9 @@ void main()
 	pass_textureCoordinates = aTexCoord;
 	pass_normal = mat3(transpose(inverse(model))) * aNormal;
 
-	vec3 viewVector = normalize(cameraPosition - Position_worldspace.xyz);
-	reflectedVector = reflect(viewVector, aNormal);
-	refractedVector = refract(viewVector, aNormal, 1.0/1.1);
+	if (mode >= 3 && mode <= 4) {
+		vec3 viewVector = normalize(cameraPosition - Position_worldspace.xyz);
+		reflectedVector = reflect(viewVector, aNormal);
+		refractedVector = refract(viewVector, aNormal, 1.0/1.2);
+	}
 }

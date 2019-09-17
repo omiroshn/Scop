@@ -19,6 +19,7 @@
 int programIsRunning = 1;
 int screen_width = 960, screen_height = 540;
 int space_pressed = 1;
+int primitive_mode = 1;
 
 
 #include <stdint.h>
@@ -106,21 +107,14 @@ void handle_events()
 		else if (e.type == SDL_KEYDOWN)
 		{
 			keyStates[e.key.keysym.scancode] = true;
-			if (e.key.keysym.scancode == SDL_SCANCODE_LEFTBRACKET)
-			{
-				mode -= 1;
-				if (mode < 1)
-					mode = 3;
-			}
-			if (e.key.keysym.scancode == SDL_SCANCODE_RIGHTBRACKET)
-			{
-				mode += 1;
-				if (mode > 3)
-					mode = 1;
-			}
-
+			if (e.key.keysym.scancode == SDL_SCANCODE_LEFTBRACKET && (mode -= 1))
+				mode < 1 ? mode = 6 : 1;
+			if (e.key.keysym.scancode == SDL_SCANCODE_RIGHTBRACKET && (mode += 1))
+				mode > 6 ? mode = 1 : 1;
 			if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
 				space_pressed ^= 1;
+			if (e.key.keysym.scancode == SDL_SCANCODE_P)
+				primitive_mode ^= 1;
 		}
 		else if (e.type == SDL_KEYUP)
 			keyStates[e.key.keysym.scancode] = false;
@@ -598,8 +592,8 @@ int main (void) {
 	// load_obj("res/models/teapot/teapot.obj", vertices);
 	// load_obj("res/models/teapot/teapot2.obj", vertices);
 
-	// load_obj("res/models/dragon/dragon.obj", vertices);
-	load_obj("res/models/dragon/meta.obj", vertices);
+	load_obj("res/models/dragon/dragon.obj", vertices);
+	// load_obj("res/models/dragon/meta.obj", vertices);
 	// load_obj("res/models/dragon/tea.obj", vertices);
 
 	Binded bindedObj = set_up_object(vertices);
@@ -608,8 +602,8 @@ int main (void) {
 	load_obj("res/models/cube/newCube.obj", skyboxVertices);
 	Binded cubemapObj = set_up_skybox(skyboxVertices);
 
-	// const char *path = "res/models/dragon/dragon.png";
-	const char *path = "res/models/dragon/meta.png";
+	const char *path = "res/models/dragon/dragon.png";
+	// const char *path = "res/models/dragon/meta.png";
 	// const char *path = "res/models/dragon/tea.png";
 
 	// const char *path = "res/models/Notebook/textures/Lowpoly_Laptop_2.jpg";
@@ -681,8 +675,6 @@ int main (void) {
 
 		tick();
 		handle_events();
-		
-		// GLCall(glCullFace(GL_FRONT));
 
 		GLCall(glDisable(GL_DEPTH_TEST));
 		GLCall( glBindVertexArray(cubemapObj.vao) );
@@ -690,9 +682,6 @@ int main (void) {
 		GLCall( glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID) );
 		draw_skybox(skyboxVertices.size(), cubemapObj.program);
 		glBindVertexArray(0);
-
-		// GLCall(glEnable(GL_CULL_FACE));
-		// GLCall(glCullFace(GL_BACK));
 		
 		GLCall(glEnable(GL_DEPTH_TEST));
 		GLCall(glBindVertexArray(bindedObj.vao));
@@ -734,9 +723,16 @@ void draw_object(unsigned int size, unsigned int program)
 	setMat4(program, "view", view);
 	setMat4(program, "model", model);
 	setVec3(program, "lightPos", lightPos);
-	// setVec3(program, "cameraPos", cameraPos);
 	setInt1(program, "mode", mode);
 
-	GLCall(glDrawArrays(GL_TRIANGLES, 0, size));
-	GLCall(glBindVertexArray(0));
+	if (primitive_mode)
+	{
+		GLCall(glDrawArrays(GL_TRIANGLES, 0, size));
+		GLCall(glBindVertexArray(0));
+	}
+	else
+	{
+		GLCall(glDrawArrays(GL_LINES, 0, size));
+		GLCall(glBindVertexArray(0));
+	}
 }
