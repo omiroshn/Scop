@@ -21,6 +21,23 @@ const vec3 lightColor = vec3(1.0,1.0,1.0);
 const float lightPower = 50.0;
 const vec3 materialSpecularColor = vec3(0.3,0.3,0.3);
 
+vec3 blendNormal(vec3 normal)
+{
+	vec3 blending = abs(normal);
+	blending = normalize(max(blending, 0.00001));
+	blending /= vec3(blending.x + blending.y + blending.z);
+	return blending;
+}
+
+vec3 triplanarMapping (sampler2D textur, vec3 normal, vec3 position)
+{
+	vec3 normalBlend = blendNormal(normal);
+	vec3 xColor = texture(textur, position.yz).rgb;
+	vec3 yColor = texture(textur, position.xz).rgb;
+	vec3 zColor = texture(textur, position.xy).rgb;
+	return (xColor * normalBlend.x + yColor * normalBlend.y + zColor * normalBlend.z);
+}
+
 void main()
 {
 	if (mode >= 1 && mode <= 2) {
@@ -61,6 +78,8 @@ void main()
 		}
 	} else if (mode == 5) { //normal
 		out_Colour = vec4(pass_normal, 1.0);
+		// vec3 color = triplanarMapping(textureSampler, pass_normal, Position_worldspace);
+		// out_Colour = vec4(color, 1.0);
 	} else if (mode == 6) { //grey
 		float grey = (pass_normal.x + pass_normal.y+ pass_normal.z) / 3.0;
 		vec3 g = vec3(grey, grey, grey);

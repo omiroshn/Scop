@@ -1,8 +1,6 @@
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include "stb_image.h"
+#include "scop.h"
 
-void InitGlew(SDL_Window *window)
+void init_glew(SDL_Window *window)
 {
 	SDL_GLContext context;
 	GLenum err;
@@ -15,7 +13,7 @@ void InitGlew(SDL_Window *window)
 	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 }
 
-SDL_Window *InitWindow()
+SDL_Window *init_window()
 {
 	SDL_Window *window;
 	
@@ -43,4 +41,29 @@ SDL_Window *InitWindow()
 	SDL_GL_SetSwapInterval(1);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	return (window);
+}
+
+void		init_timer(t_timer *timer)
+{
+	mach_timebase_info_data_t coeff;
+
+	mach_timebase_info(&coeff);
+	timer->numer = coeff.numer;
+	timer->denom = coeff.denom;
+	timer->current_time = 0;
+	timer->start = mach_absolute_time();
+	timer->current = timer->start;
+	timer->ttime = 0.0f;
+	timer->old_time = 0.0f;
+}
+
+void		tick(t_timer *timer)
+{
+	float delta_ttime;
+
+	timer->current = mach_absolute_time() - timer->start;
+	timer->current_time = timer->current * timer->numer / timer->denom;
+	timer->ttime = (float)(timer->current_time / 1000) / 1000000.0f;
+	timer->delta_time = timer->ttime - timer->old_time;
+	timer->old_time = timer->ttime;
 }

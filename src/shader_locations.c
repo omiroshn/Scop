@@ -11,39 +11,38 @@
 /* ************************************************************************** */
 
 #include "scop.h"
-#include "debug.h"
 
-void setVec3(unsigned int program, const char *name, glm::vec3 vector)
+void set_vec3(unsigned int program, const char *name, t_vec3 vector)
 {
-	GLCall(int location = glGetUniformLocation(program, name));
+	int location = glGetUniformLocation(program, name);
 	if (location == -1)
 	{
 		fprintf(stderr, "Could not bind uniform %s\n", name);
 		exit(0);
 	}
-	GLCall(glUniform3fv(location, 1, &vector.x));
+	glUniform3fv(location, 1, &vector.x);
 }
 
-void setMat4(unsigned int program, const char *name, glm::mat4 matrix)
-{
-	GLCall(glUseProgram(program));
-	GLCall(int location = glGetUniformLocation(program, name));
-	if (location == -1)
-	{
-		fprintf(stderr, "Could not bind uniform %s\n", name);
-		exit(0);
-	}
-	GLCall(glUniformMatrix4fv(location, 1, GL_FALSE, &matrix[0][0]));
-}
+// void set_mat4(unsigned int program, const char *name, glm::mat4 matrix)
+// {
+// 	glUseProgram(program);
+// 	int location = glGetUniformLocation(program, name);
+// 	if (location == -1)
+// 	{
+// 		fprintf(stderr, "Could not bind uniform %s\n", name);
+// 		exit(0);
+// 	}
+// 	glUniformMatrix4fv(location, 1, GL_FALSE, &matrix[0][0]);
+// }
 
-void setInt1(unsigned int program, const char *name, int value)
+void set_int1(unsigned int program, const char *name, int value)
 {
-	GLCall(glUseProgram(program));
-	GLCall(int location = glGetUniformLocation(program, name));
+	glUseProgram(program);
+	int location = glGetUniformLocation(program, name);
 	if (location == -1)
 	{
 		fprintf(stderr, "Could not bind uniform %s\n", name);
 		exit(0);
 	}
-	GLCall(glUniform1i(location, value));
+	glUniform1i(location, value);
 }

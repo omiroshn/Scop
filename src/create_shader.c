@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "scop.h"
-#include "debug.h"
 
 static void		print_shader_compilation_info(const char *source, GLuint shader)
 {
@@ -49,7 +48,7 @@ static void		print_link_info(GLuint program)
 
 	printf("Shaders: Link stage failed.\n");
 	glGetProgramInfoLog(program, 4096, &size, log);
-	printf("Shaders: Program link log:\n %s\n", log);
+	printf("Shaders: Program link log:\n%s\n", log);
 }
 
 GLuint			create_program(const char *vert, const char *frag)
@@ -75,7 +74,7 @@ GLuint			create_program(const char *vert, const char *frag)
 		print_link_info(program);
 		return (0);
 	}
-	GLCall( glValidateProgram(program) );
+	glValidateProgram(program);
 	return (program);
 }
 
