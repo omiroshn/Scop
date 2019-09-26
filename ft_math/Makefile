@@ -31,20 +31,24 @@ RED=\033[31m
 LRED=\033[91m
 BRED=\033[1;31m
 
-all: $(NAME)
-
 .PHONY: all clean
 .NOTPARALLEL: all $(NAME) clean fclean re 
+
+all: $(NAME)
 
 $(NAME): $(OBJ) $(HEADERS)
 	@printf " $(RED)>$(EOC) $(GREEN)$(NAME) is ready.$(EOC)\n"
 	@ar rcs $(NAME) $(OBJ)
 	@ranlib $(NAME)
+
 $(OBJ): obj/%.o: src/%.c $(HEADERS)
 	@$(CC) -o $@ $(FLAGS) $(INCLUDES) -c $<
 	@printf "$(GREEN).$(EOC)"
+
 clean:
 	@rm -rf $(OBJ)
+
 fclean: clean
 	@rm -rf $(NAME)
+
 re: fclean all

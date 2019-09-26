@@ -11,8 +11,8 @@
 /* ************************************************************************** */
 
 #ifndef QUATERNION_H
-#define QUATERNION_H
+# define QUATERNION_H
 
-#define QUAT_SIZE 4
+# define QUAT_SIZE 4
 
 #endif

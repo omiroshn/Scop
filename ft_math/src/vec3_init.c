@@ -14,10 +14,22 @@
 
 inline t_vec3	vec3_init(float x, float y, float z)
 {
-    return ((t_vec3){{{x, y, z}}});
+	return ((t_vec3){{{x, y, z}}});
 }
 
 inline t_vec3	vec3_init_single(float x)
 {
-    return ((t_vec3){{{x, x, x}}});
+	return ((t_vec3){{{x, x, x}}});
+}
+
+inline t_vec3	vec3_normalize_safe(t_vec3 v)
+{
+	const float d = vec3_dot(v, v);
+
+	return (d == 0.0 ? v : vec3_mult_scalar(v, MSQRT(d)));
+}
+
+inline t_vec3	vec3_normalize(t_vec3 v)
+{
+	return (vec3_mult_scalar(v, vec3_length(v)));
 }

@@ -39,3 +39,14 @@ inline t_mat4		mat4_identity(void)
 {
 	return (g_identity_mat4);
 }
+
+inline t_mat4		mat4_crop_mat3(t_mat4 mat)
+{
+	t_mat4 res;
+
+	res.col0 = vec4_init(mat.col0.x, mat.col0.y, mat.col0.z, 0.0f);
+	res.col1 = vec4_init(mat.col1.x, mat.col1.y, mat.col1.z, 0.0f);
+	res.col2 = vec4_init(mat.col2.x, mat.col2.y, mat.col2.z, 0.0f);
+	res.col3 = vec4_init(0.0f, 0.0f, 0.0f, 1.0f);
+	return (res);
+}

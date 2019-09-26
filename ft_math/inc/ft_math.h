@@ -11,10 +11,13 @@
 /* ************************************************************************** */
 
 #ifndef FT_MATH_H
-#define FT_MATH_H
+# define FT_MATH_H
 
-#include "vecf.h"
-#include "matrix.h"
-#include "quaternion.h"
+# include "vecf.h"
+# include "matrix.h"
+# include "quaternion.h"
+
+# define TORAD(x) ((x) * 0.017453293f)
+# define TODEG(x) ((x) * 57.2957795f)
 
 #endif

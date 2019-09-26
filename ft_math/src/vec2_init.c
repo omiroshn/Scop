@@ -14,10 +14,10 @@
 
 inline t_vec2	vec2_init(float x, float y)
 {
-    return ((t_vec2){{{x, y}}});
+	return ((t_vec2){{{x, y}}});
 }
 
 inline t_vec2	vec2_init_single(float x)
 {
-    return ((t_vec2){{{x, x}}});
+	return ((t_vec2){{{x, x}}});
 }

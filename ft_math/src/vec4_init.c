@@ -14,10 +14,10 @@
 
 inline t_vec4	vec4_init(float x, float y, float z, float w)
 {
-    return ((t_vec4){{{x, y, z, w}}});
+	return ((t_vec4){{{x, y, z, w}}});
 }
 
 inline t_vec4	vec4_init_single(float x)
 {
-    return ((t_vec4){{{x, x, x, x}}});
+	return ((t_vec4){{{x, x, x, x}}});
 }
