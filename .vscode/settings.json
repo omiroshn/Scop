@@ -62,6 +62,8 @@
         "*.tcc": "cpp",
         "cinttypes": "cpp",
         "hashtable": "cpp",
-        "__memory": "cpp"
-    }
+        "__memory": "cpp",
+        "quaternion.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }

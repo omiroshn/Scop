@@ -15,7 +15,8 @@ NAME = ft_math.a
 FLAGS = -Wall -Wextra -Werror -Ofast
 
 CC = clang
-FILES = vec4_init vec3_init vec3_geometry vec3_math vec2_init mat4_init mat4_mvp
+FILES = vec4_init vec3_init vec3_geometry vec3_math vec2_init mat4_init mat4_mvp \
+quaternion_init quaternion_math
 
 SRC = $(addprefix obj/, $(addsuffix .c, $(FILES)))
 OBJ = $(addprefix obj/, $(addsuffix .o, $(FILES)))

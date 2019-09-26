@@ -20,44 +20,27 @@ int programIsRunning = 1;
 int screen_width = 960, screen_height = 540;
 int space_pressed = 1;
 int primitive_mode = 1;
+int mode = 1;
 
 // bool mRightButtonPressed = false;
 
-// t_vec3 cameraPos(0.0f, -4.0f, 15.0f);
-// t_vec3 cameraDir(0.0f, 0.0f, -1.0f);
-// t_vec3 cameraRight(-1.0f, 0.0f, 0.0f);
-// t_vec3 cameraUp(0.0f, -1.0f, 0.0f);
 
 // t_vec3 mWorldUp(0.0f, 1.0f, 0.0f);
 // t_vec3 mWorldRight(1.0f, 0.0f, 0.0f);
 // t_vec3 cameraFront(0.0f, 0.0f, -1.0f);
 
-// // t_vec3 lightPos(0.2, -1.0, 0.3);
-// t_vec3 lightPos(0.0,-10.0,0.0);
 
-short key_states[256];
-int mode = 1;
 
-void init_keys(short *key_states)
-{
-	for (int i = 0; i < 255; i++)
-		key_states[i] = 1;
-}
 
 // float yaw   = 0.0f;
 // float pitch =  0.0f;
-
-// void print_vec3(glm::vec3 vec)
-// {
-// 	std::cout << "x: " << vec.x << " y: " << vec.y << " z: " << vec.z << std::endl;
-// }
 
 // void print_vec4(glm::vec4 vec)
 // {
 // 	std::cout << "x: " << vec.x << " y: " << vec.y << " z: " << vec.z << std::endl;
 // }
 
-void handle_events(t_timer *timer)
+void handle_events(t_scop *s)
 {
 	SDL_Event    e;
 	
@@ -67,7 +50,7 @@ void handle_events(t_timer *timer)
 			programIsRunning = 0;
 		else if (e.type == SDL_KEYDOWN)
 		{
-			key_states[e.key.keysym.scancode] = 1;
+			s->key_states[e.key.keysym.scancode] = 1;
 			if (e.key.keysym.scancode == SDL_SCANCODE_LEFTBRACKET)
 			{
 				mode -= 1;
@@ -86,122 +69,124 @@ void handle_events(t_timer *timer)
 				primitive_mode ^= 1;
 		}
 		else if (e.type == SDL_KEYUP)
-			key_states[e.key.keysym.scancode] = 0;
+			s->key_states[e.key.keysym.scancode] = 0;
 		else if (e.type == SDL_MOUSEMOTION)
 		{			
-			// t_vec3 up = vec3_init(cameraUp.x, cameraUp.y, cameraUp.z);
-			// t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
-			// t_quaternion q = init_quat_deg(up, -e.motion.xrel * timer->delta_time * 50);
-			// t_quaternion r = init_quat_deg(right, -e.motion.yrel * timer->delta_time * 50);
+			// t_vec3 up = vec3_init(s->camera.up.x, s->camera.up.y, s->camera.up.z);
+			// t_vec3 right = vec3_init(s->camera.right.x, s->camera.right.y, s->camera.right.z);
+			// t_quaternion q = quat_init_deg(up, -e.motion.xrel * s->timer.delta_time * 50);
+			// t_quaternion r = quat_init_deg(right, -e.motion.yrel * s->timer.delta_time * 50);
 			// t_quaternion su = quat_mult_quat(q,r);
 			
-			// t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
+			// t_vec3 dir = vec3_init(s->camera.direction.x, s->camera.direction.y, s->camera.direction.z);
 			// dir = quat_transform_vec3(su, dir);
-			// cameraDir.x = dir.x;
-			// cameraDir.y = dir.y;
-			// cameraDir.z = dir.z;
+			// s->camera.direction.x = dir.x;
+			// s->camera.direction.y = dir.y;
+			// s->camera.direction.z = dir.z;
 			
 			// right = vec3_cross(dir, up);
-			// cameraRight.x = right.x;
-			// cameraRight.y = right.y;
-			// cameraRight.z = right.z;
+			// s->camera.right.x = right.x;
+			// s->camera.right.y = right.y;
+			// s->camera.right.z = right.z;
 
 			// up = vec3_cross(right, dir);
-			// cameraUp.x = up.x;
-			// cameraUp.y = up.y;
-			// cameraUp.z = up.z;
+			// s->camera.up.x = up.x;
+			// s->camera.up.y = up.y;
+			// s->camera.up.z = up.z;
 			
 		}
 	}
-}
 
-// 	float cameraSpeed = delta_time * 5.f;
 
-// 	/* camera movement */
-// 	if (keyStates[SDL_SCANCODE_W])
-// 		cameraPos += cameraDir * cameraSpeed;
-// 	if (keyStates[SDL_SCANCODE_S])
-// 		cameraPos -= cameraDir * cameraSpeed;
-// 	if (keyStates[SDL_SCANCODE_A])
-// 		cameraPos -= cameraRight * cameraSpeed;
-// 	if (keyStates[SDL_SCANCODE_D])
-// 		cameraPos += cameraRight * cameraSpeed;
-// 	if (keyStates[SDL_SCANCODE_Q])
-// 		cameraPos -= cameraUp * cameraSpeed;
-// 	if (keyStates[SDL_SCANCODE_E])
-// 		cameraPos += cameraUp * cameraSpeed;
+	float cameraSpeed = s->timer.delta_time * 5.f;
 
-// 	/* light movement */
-// 	if (keyStates[SDL_SCANCODE_UP])
-// 		lightPos += cameraDir * cameraSpeed;
-// 	if (keyStates[SDL_SCANCODE_DOWN])
-// 		lightPos -= cameraDir * cameraSpeed;
-// 	if (keyStates[SDL_SCANCODE_RIGHT])
-// 		lightPos += cameraRight * cameraSpeed;
-// 	if (keyStates[SDL_SCANCODE_LEFT])
-// 		lightPos -= cameraRight * cameraSpeed;
-// 	if (keyStates[SDL_SCANCODE_O])
-// 		lightPos += cameraUp * cameraSpeed;
-// 	if (keyStates[SDL_SCANCODE_P])
-// 		lightPos -= cameraUp * cameraSpeed;
+	
+	/* camera movement */
+	if (s->key_states[SDL_SCANCODE_W])
+		s->camera.position = vec3_add(s->camera.position, vec3_mult_scalar(s->camera.direction, cameraSpeed));
+	if (s->key_states[SDL_SCANCODE_S])
+		s->camera.position = vec3_sub(s->camera.position, vec3_mult_scalar(s->camera.direction, cameraSpeed));
+	if (s->key_states[SDL_SCANCODE_A])
+		s->camera.position = vec3_sub(s->camera.position, vec3_mult_scalar(s->camera.right, cameraSpeed));
+	if (s->key_states[SDL_SCANCODE_D])
+		s->camera.position = vec3_add(s->camera.position, vec3_mult_scalar(s->camera.right, cameraSpeed));
+	if (s->key_states[SDL_SCANCODE_Q])
+		s->camera.position = vec3_sub(s->camera.position, vec3_mult_scalar(s->camera.up, cameraSpeed));
+	if (s->key_states[SDL_SCANCODE_E])
+		s->camera.position = vec3_add(s->camera.position, vec3_mult_scalar(s->camera.up, cameraSpeed));
+
+	// /* light movement */
+	// if (s->key_states[SDL_SCANCODE_UP])
+	// 	s->light.position += s->camera.direction * cameraSpeed;
+	// if (s->key_states[SDL_SCANCODE_DOWN])
+	// 	s->light.position -= s->camera.direction * cameraSpeed;
+	// if (s->key_states[SDL_SCANCODE_RIGHT])
+	// 	s->light.position += s->camera.right * cameraSpeed;
+	// if (s->key_states[SDL_SCANCODE_LEFT])
+	// 	s->light.position -= s->camera.right * cameraSpeed;
+	// if (s->key_states[SDL_SCANCODE_O])
+	// 	s->light.position += s->camera.up * cameraSpeed;
+	// if (s->key_states[SDL_SCANCODE_P])
+	// 	s->light.position -= s->camera.up * cameraSpeed;
 		
 
-// 	// if (keyStates[SDL_SCANCODE_LEFT])
-// 	// {
-// 	// 	t_vec3 up = vec3_init(cameraUp.x, cameraUp.y, cameraUp.z);
-// 	// 	t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
-// 	// 	t_quaternion q = init_quat_deg(up, 180 * delta_time);
-// 	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
-// 	// 	t_vec3 right = vec3_cross(dir, up);
-// 	// 	cameraDir.x = dir.x;
-// 	// 	cameraDir.y = dir.y;
-// 	// 	cameraDir.z = dir.z;
-// 	// 	cameraRight.x = right.x;
-// 	// 	cameraRight.y = right.y;
-// 	// 	cameraRight.z = right.z;
-// 	// }
-// 	// if (keyStates[SDL_SCANCODE_RIGHT])
-// 	// {
-// 	// 	t_vec3 up = vec3_init(cameraUp.x, cameraUp.y, cameraUp.z);
-// 	// 	t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
-// 	// 	t_quaternion q = init_quat_deg(up, -180 * delta_time);
-// 	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
-// 	// 	t_vec3 right = vec3_cross(dir, up);
-// 	// 	cameraDir.x = dir.x;
-// 	// 	cameraDir.y = dir.y;
-// 	// 	cameraDir.z = dir.z;
-// 	// 	cameraRight.x = right.x;
-// 	// 	cameraRight.y = right.y;
-// 	// 	cameraRight.z = right.z;
-// 	// }
-// 	// if (keyStates[SDL_SCANCODE_UP])
-// 	// {
-// 	// 	t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
-// 	// 	t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
-// 	// 	t_quaternion q = init_quat_deg(right, 180 * delta_time);
-// 	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
-// 	// 	t_vec3 up = vec3_cross(right, dir);
-// 	// 	cameraDir.x = dir.x;
-// 	// 	cameraDir.y = dir.y;
-// 	// 	cameraDir.z = dir.z;
-// 	// 	cameraUp.x = up.x;
-// 	// 	cameraUp.y = up.y;
-// 	// 	cameraUp.z = up.z;
-// 	// }
-// 	// if (keyStates[SDL_SCANCODE_DOWN])
-// 	// {
-// 	// 	t_vec3 right = vec3_init(cameraRight.x, cameraRight.y, cameraRight.z);
-// 	// 	t_vec3 dir = vec3_init(cameraDir.x, cameraDir.y, cameraDir.z);
-// 	// 	t_quaternion q = init_quat_deg(right, -180 * delta_time);
-// 	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
-// 	// 	t_vec3 up = vec3_cross(right, dir);
-// 	// 	cameraDir.x = dir.x;
-// 	// 	cameraDir.y = dir.y;
-// 	// 	cameraDir.z = dir.z;
-// 	// 	cameraUp.x = up.x;
-// 	// 	cameraUp.y = up.y;
-// 	// 	cameraUp.z = up.z;
-// 	// }
+	// if (s->key_states[SDL_SCANCODE_LEFT])
+	// {
+	// 	t_vec3 up = vec3_init(s->camera.up.x, s->camera.up.y, s->camera.up.z);
+	// 	t_vec3 dir = vec3_init(s->camera.direction.x, s->camera.direction.y, s->camera.direction.z);
+	// 	t_quaternion q = quat_init_deg(up, 180 * s->timer.delta_time);
+	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
+	// 	t_vec3 right = vec3_cross(dir, up);
+	// 	s->camera.direction.x = dir.x;
+	// 	s->camera.direction.y = dir.y;
+	// 	s->camera.direction.z = dir.z;
+	// 	s->camera.right.x = right.x;
+	// 	s->camera.right.y = right.y;
+	// 	s->camera.right.z = right.z;
+	// }
+	// if (s->key_states[SDL_SCANCODE_RIGHT])
+	// {
+	// 	t_vec3 up = vec3_init(s->camera.up.x, s->camera.up.y, s->camera.up.z);
+	// 	t_vec3 dir = vec3_init(s->camera.direction.x, s->camera.direction.y, s->camera.direction.z);
+	// 	t_quaternion q = quat_init_deg(up, -180 * s->timer.delta_time);
+	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
+	// 	t_vec3 right = vec3_cross(dir, up);
+	// 	s->camera.direction.x = dir.x;
+	// 	s->camera.direction.y = dir.y;
+	// 	s->camera.direction.z = dir.z;
+	// 	s->camera.right.x = right.x;
+	// 	s->camera.right.y = right.y;
+	// 	s->camera.right.z = right.z;
+	// }
+	// if (s->key_states[SDL_SCANCODE_UP])
+	// {
+	// 	t_vec3 right = vec3_init(s->camera.right.x, s->camera.right.y, s->camera.right.z);
+	// 	t_vec3 dir = vec3_init(s->camera.direction.x, s->camera.direction.y, s->camera.direction.z);
+	// 	t_quaternion q = quat_init_deg(right, 180 * s->timer.delta_time);
+	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
+	// 	t_vec3 up = vec3_cross(right, dir);
+	// 	s->camera.direction.x = dir.x;
+	// 	s->camera.direction.y = dir.y;
+	// 	s->camera.direction.z = dir.z;
+	// 	s->camera.up.x = up.x;
+	// 	s->camera.up.y = up.y;
+	// 	s->camera.up.z = up.z;
+	// }
+	// if (s->key_states[SDL_SCANCODE_DOWN])
+	// {
+	// 	t_vec3 right = vec3_init(s->camera.right.x, s->camera.right.y, s->camera.right.z);
+	// 	t_vec3 dir = vec3_init(s->camera.direction.x, s->camera.direction.y, s->camera.direction.z);
+	// 	t_quaternion q = quat_init_deg(right, -180 * s->timer.delta_time);
+	// 	dir = vec3_normalize(quat_transform_vec3(q, dir));
+	// 	t_vec3 up = vec3_cross(right, dir);
+	// 	s->camera.direction.x = dir.x;
+	// 	s->camera.direction.y = dir.y;
+	// 	s->camera.direction.z = dir.z;
+	// 	s->camera.up.x = up.x;
+	// 	s->camera.up.y = up.y;
+	// 	s->camera.up.z = up.z;
+	// }
+}
 
 // 	// print_vec(cameraUp);
 
@@ -566,7 +551,18 @@ t_binded set_up_skybox(t_vertex *vertices, int size)
 	return (t_binded){vao, program};
 }
 
-// glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, 0.0));
+void print_vec3(t_vec3 vec)
+{
+	printf("%.0f %.0f %.0f\n", vec.x, vec.y, vec.z);
+}
+
+void print_mat4(t_mat4 mat)
+{
+	printf("%f %f %f %f\n", mat.m11, mat.m12, mat.m13, mat.m14);
+	printf("%f %f %f %f\n", mat.m21, mat.m22, mat.m23, mat.m24);
+	printf("%f %f %f %f\n", mat.m31, mat.m32, mat.m33, mat.m34);
+	printf("%f %f %f %f\n\n", mat.m41, mat.m42, mat.m43, mat.m44);
+}
 
 int main(int argc, char **argv)
 {
@@ -578,8 +574,15 @@ int main(int argc, char **argv)
 		return (-1);
 	init_glew(window);
 	init_timer(&scop.timer);
+	init_keys(scop.key_states);
+	scop.camera.position = vec3_init(0.0f, -4.0f, 15.0f);
+	scop.camera.direction = vec3_init(0.0f, 0.0f, -1.0f);
+	scop.camera.right = vec3_init(-1.0f, 0.0f, 0.0f);
+	scop.camera.up = vec3_init(0.0f, -1.0f, 0.0f);
+	
+	// t_vec3 lightPos(0.2, -1.0, 0.3);
+	scop.light.position = vec3_init(0.0,-10.0,0.0);
 	tick(&scop.timer);
-	init_keys(key_states);
 	int size = get_size_of_obj(argv[1]);
 	if (!size) {
 		ft_printf("Invalid obj file.\n");
@@ -589,6 +592,13 @@ int main(int argc, char **argv)
 	t_vertex *vertices = ft_memalloc(sizeof(t_vertex) * size);
 	load_obj(argv[1], vertices, size);
 	t_binded bindedObj = set_up_object(vertices, size);
+
+	scop.model = mat4_translate(mat4_identity(), vec3_init(0.0f, 0.0f, 0.0f));
+	// t_mat4 rotate = mat4_rotate(scop.model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f)); 
+	// scop.model = mat4_mul_mat4(scop.model, rotate);
+
+	print_mat4(scop.model);
+
 
 	int skybox_size = get_size_of_obj("res/models/cube/newCube.obj");
 	if (!skybox_size) {
@@ -616,7 +626,6 @@ int main(int argc, char **argv)
 
 	unsigned int objectTextureID = bind_texture(texture_path);
 	unsigned int skyboxTextureID = bind_cubemap(textures_faces);
-	// model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	set_int1(cubemapObj.program, "cubemap", 0);
 	set_int1(bindedObj.program, "textureSampler", 0);
@@ -633,25 +642,23 @@ int main(int argc, char **argv)
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		tick(&scop.timer);
-		handle_events(&scop.timer);
+		handle_events(&scop);
 
 		glDisable(GL_DEPTH_TEST);
 		glBindVertexArray(cubemapObj.vao);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
-		draw_skybox(skybox_size, cubemapObj.program);
+		draw_skybox(&scop, skybox_size, cubemapObj.program);
 		glBindVertexArray(0);
 		
-	// 	for (int i = 0; i < object_count; i++) {
-	// 		GLCall(glEnable(GL_DEPTH_TEST));
-	// 		GLCall(glBindVertexArray(bindedObj[i].vao));
-	// 		GLCall(glActiveTexture(GL_TEXTURE0));
-	// 		GLCall(glBindTexture(GL_TEXTURE_2D, objectTextureID));
-	// 		GLCall(glActiveTexture(GL_TEXTURE0 + 1) );
-	// 		GLCall(glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID) );
-	// 		draw_object(vertices[i].size(), bindedObj[i].program);
-	// 		glBindVertexArray(0);
-		// }
+		glEnable(GL_DEPTH_TEST);
+		glBindVertexArray(bindedObj.vao);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, objectTextureID);
+		glActiveTexture(GL_TEXTURE0 + 1);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
+		draw_object(&scop, size, bindedObj.program);
+		glBindVertexArray(0);
 		SDL_GL_SwapWindow(window);
 	}
 	
@@ -661,41 +668,56 @@ int main(int argc, char **argv)
 	return (0);
 }
 
-void draw_skybox(unsigned int size, unsigned int program)
+
+void draw_skybox(t_scop *s, unsigned int size, unsigned int program)
 {
-	t_mat4 look_at = look_at(cameraPos, cameraPos + cameraDir, cameraUp);
-	// glm::mat4 view = glm::mat4(glm::mat3(look_at));
-	// glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 100.0f);
+	t_mat4 look_at = mat4_look_at(s->camera.position, vec3_add(s->camera.position, s->camera.direction), s->camera.up);
+	t_mat4 view = mat4_crop_mat3(look_at);
+	t_mat4 projection = mat4_projection(TORAD(45.0f), 1.0f * screen_width / screen_height, 0.1f, 100.0f);
 
 	glDepthFunc(GL_LEQUAL);
-	// setMat4(program, "projection", projection);
-	// setMat4(program, "view", view);
+	set_mat4(program, "projection", projection);
+	set_mat4(program, "view", view);
 	glDrawArrays(GL_TRIANGLES, 0, size);
 	glBindVertexArray(0);
 	glDepthFunc(GL_LESS);
 }
 
-// void draw_object(unsigned int size, unsigned int program)
-// {
-// 	glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraDir, cameraUp);
-// 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
-// 	if (!space_pressed)
-// 		model = glm::rotate(model, delta_time * glm::radians(55.0f), glm::vec3(0.0f, 1.0f, 0.0f)); 
 
-// 	setMat4(program, "projection", projection);
-// 	setMat4(program, "view", view);
-// 	setMat4(program, "model", model);
-// 	setVec3(program, "lightPos", lightPos);
-// 	setInt1(program, "mode", mode);
+void draw_object(t_scop *s, unsigned int size, unsigned int program)
+{
+	t_mat4 view = mat4_look_at(s->camera.position, vec3_add(s->camera.position, s->camera.direction), s->camera.up);
+	t_mat4 projection = mat4_projection(TORAD(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
 
-// 	if (primitive_mode)
-// 	{
-// 		GLCall(glDrawArrays(GL_TRIANGLES, 0, size));
-// 		GLCall(glBindVertexArray(0));
-// 	}
-// 	else
-// 	{
-// 		GLCall(glDrawArrays(GL_LINES, 0, size));
-// 		GLCall(glBindVertexArray(0));
-// 	}
-// }
+	// printf("view\n");
+	// print_mat4(view);
+	// printf("projection\n");
+	// print_mat4(projection);
+
+	// if (!space_pressed)
+	// {
+	// 	t_mat4 rotate = mat4_rotate(s->model, vec3_init(0.0f, 1.0f, 0.0f), s->timer.delta_time * TORAD(55.0f)); 
+	// 	s->model = mat4_mul_mat4(s->model, rotate);
+	// }
+		
+	// printf("model\n");
+	// print_mat4(s->model);
+
+
+	set_mat4(program, "projection", projection);
+	set_mat4(program, "view", view);
+	set_mat4(program, "model", s->model);
+	set_vec3(program, "lightPos", s->light.position);
+	set_int1(program, "mode", mode);
+
+	if (primitive_mode)
+	{
+		glDrawArrays(GL_TRIANGLES, 0, size);
+		glBindVertexArray(0);
+	}
+	else
+	{
+		glDrawArrays(GL_LINES, 0, size);
+		glBindVertexArray(0);
+	}
+}

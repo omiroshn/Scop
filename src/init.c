@@ -67,3 +67,9 @@ void		tick(t_timer *timer)
 	timer->delta_time = timer->ttime - timer->old_time;
 	timer->old_time = timer->ttime;
 }
+
+void		init_keys(short *key_states)
+{
+	for (int i = 0; i < 255; i++)
+		key_states[i] = 0;
+}

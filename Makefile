@@ -27,24 +27,28 @@ MATH_LIB = ./vendor/ft_math/lib/ft_math.a
 
 FRAMEWORKS = -lglew -framework OpenGL -lsdl2
 
-all: $(LIBFT_DIR)libft.a $(MATH_DIR)ft_math.a $(OBJECTS)
-	$(CC) $(OBJECTS) $(LIBS) $(FRAMEWORKS) -o $(NAME) 
+all: $(NAME)	
+
+$(NAME): $(LIBFT_DIR)libft.a $(MATH_DIR)ft_math.a $(OBJECTS)
+	$(CC) $(OBJECTS) $(LIBS) $(FRAMEWORKS) -o $(NAME)
 
 $(LIBFT_DIR)libft.a:
-	@make --no-print-directory -j3 -C $(LIBFT_DIR)
+	make --no-print-directory -j3 -C $(LIBFT_DIR)
 
 $(MATH_DIR)ft_math.a:
-	@make --no-print-directory -j3 -C $(MATH_DIR)
+	make --no-print-directory -j3 -C $(MATH_DIR)
 
 obj/%.o: src/%.c
 	$(CC) $(INCLUDES) -o $@ -c $^ -g
 
 clean:
 	rm -rf $(OBJECTS)
-	@make --no-print-directory -j3 -C $(LIBFT_DIR) clean
+	make --no-print-directory -j3 -C $(LIBFT_DIR) clean
+	make --no-print-directory -j3 -C $(MATH_DIR) clean
 
 fclean: clean
 	rm -rf $(NAME)
-	@make --no-print-directory -j3 -C $(LIBFT_DIR) fclean
+	make --no-print-directory -j3 -C $(LIBFT_DIR) fclean
+	make --no-print-directory -j3 -C $(MATH_DIR) fclean
 
 re: fclean all

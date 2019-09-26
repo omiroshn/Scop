@@ -48,13 +48,31 @@ typedef struct	s_binded
 	unsigned int program;
 }				t_binded;
 
+typedef struct	s_camera
+{
+	t_vec3 position;
+	t_vec3 direction;
+	t_vec3 right;
+	t_vec3 up;
+}				t_camera;
+
+typedef struct	s_light
+{
+	t_vec3 position;
+}				t_light;
+
 typedef	struct	s_scop
 {
-	t_timer	timer;
+	short		key_states[256];
+	t_timer		timer;
+	t_camera	camera;
+	t_light		light;
+	t_mat4		model;
 	// vertices
 }				t_scop;
 
 
+void			init_keys(short *key_states);
 SDL_Window*		init_window();
 void			init_glew(SDL_Window *window);
 void			init_timer(t_timer *timer);
@@ -85,10 +103,10 @@ char		*ft_strtrim(char const *s);
 void		free_strsplit(char **str);
 int   read_shaders(const char *vertex_path, const char *fragment_path);
 
-void draw_object(unsigned int size, unsigned int program);
-void draw_skybox(unsigned int size, unsigned int program);
+void draw_object(t_scop *s, unsigned int size, unsigned int program);
+void draw_skybox(t_scop *s, unsigned int size, unsigned int program);
 
-// void setMat4(unsigned int program, const char *name, glm::mat4 matrix);
+void set_mat4(unsigned int program, const char *name, t_mat4 matrix);
 void set_vec3(unsigned int program, const char *name, t_vec3 vector);
 void set_int1(unsigned int program, const char *name, int value);
 

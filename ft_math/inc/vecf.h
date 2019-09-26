@@ -14,6 +14,7 @@
 # define VECF_H
 
 # include <math.h>
+# include <xmmintrin.h>
 
 # define VEC2_SIZE 2
 # define VEC3_SIZE 3
@@ -41,15 +42,22 @@ typedef struct	s_vec3
 {
 	union
 	{
+		__m128 m128;
 		struct
 		{
-			float x;
-			float y;
-			float z;
+			float x, y, z;
+			union
+			{
+				int a;
+				unsigned u;
+				float w;
+			}; 
 		};
-		float v[VEC3_SIZE];
+		float v[4];
 	};
 }				t_vec3;
+
+typedef t_vec3	t_vec4;
 
 t_vec3			vec3_init(float x, float y, float z);
 t_vec3			vec3_init_single(float x);
@@ -67,23 +75,13 @@ float       	vec3_length(t_vec3 v);
 float       	vec3_distance(t_vec3 v1, t_vec3 v2);
 t_vec3      	vec3_mult_scalar(t_vec3 v, float c);
 
-
-typedef struct	s_vec4
-{
-	union
-	{
-		struct
-		{
-			float x;
-			float y;
-			float z;
-			float w;
-		};
-		float v[VEC4_SIZE];
-	};
-}				t_vec4;
-
 t_vec4			vec4_init(float x, float y, float z, float w);
 t_vec4			vec4_init_single(float x);
+t_vec4			vec4_add(t_vec4 v1, t_vec4 v2);
+t_vec4			vec4_mult(t_vec4 v1, t_vec4 v2);
+t_vec4			vec4_mult_scalar(t_vec4 v, float c);
+t_vec4	vec4_normalize(t_vec4 v);
+float	vec4_length(t_vec4 v);
+t_vec4	vec4_init_m128(__m128 m128);
 
 #endif
