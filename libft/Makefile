@@ -11,13 +11,8 @@
 # **************************************************************************** #
 
 NAME = libft.a
-OS = $(shell uname)
 
-ifeq ($(OS), Linux)
-FLAGS =
-else
 FLAGS = -Wall -Wextra -Werror -Ofast
-endif
 
 CC = clang
 LIBFT = ft_atoi ft_bzero ft_countwords \

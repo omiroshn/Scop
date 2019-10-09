@@ -71,20 +71,20 @@ typedef struct	s_mat4
 		struct
 		{
 			float m11;
-			float m21;
-			float m31;
-			float m41;
 			float m12;
-			float m22;
-			float m32;
-			float m42;
-			float m13;
-			float m23;
-			float m33;
-			float m43;
 			float m14;
+			float m13;
+			float m21;
+			float m22;
+			float m23;
 			float m24;
+			float m31;
+			float m32;
+			float m33;
 			float m34;
+			float m41;
+			float m42;
+			float m43;
 			float m44;
 		};
         float v[MAT4_SIZE];
