@@ -70,6 +70,6 @@ t_mat4      	mat4_look_at(t_vec3 eye, t_vec3 target, t_vec3 up_dir);
 t_mat4			mat4_projection(float fov, float aspect, float near, float far);
 t_mat4			mat4_translate(t_mat4 mat, t_vec3 vec);
 t_mat4			mat4_rotate(t_mat4 mat, t_vec3 vec, float axis);
-t_mat4	mat4_mul_mat4(t_mat4 m1, t_mat4 m2);
+t_mat4			mat4_mul_mat4(t_mat4 m1, t_mat4 m2);
 
 #endif

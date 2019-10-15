@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "scop.h"
-// #include "debug.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -603,8 +602,8 @@ int main(int argc, char **argv)
 	t_binded cubemapObj = set_up_skybox(skybox_vertices, skybox_size);
 
 	scop.model = mat4_translate(mat4_identity(), vec3_init(0.0f, 0.0f, 0.0f));
-	t_mat4 rotate = mat4_rotate(scop.model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f)); 
-	scop.model = mat4_mul_mat4(scop.model, rotate);
+	scop.model = mat4_rotate(scop.model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f)); 
+	// scop.model = mat4_mul_mat4(scop.model, rotate);
 
 	char *texture_path = "res/models/dragon/dragon.png";
 	// const char *path = "res/models/dragon/meta.png";
@@ -618,7 +617,6 @@ int main(int argc, char **argv)
 		"res/models/Yokohama/posz.jpg",
 		"res/models/Yokohama/negz.jpg",
 	};
-	// std::vector<std::string> textures_faces(vinit, std::end(vinit));
 
 	unsigned int objectTextureID = bind_texture(texture_path);
 	unsigned int skyboxTextureID = bind_cubemap(textures_faces);
@@ -666,13 +664,17 @@ int main(int argc, char **argv)
 	return (0);
 }
 
-
 void draw_skybox(t_scop *s, unsigned int size, unsigned int program)
 {
-	t_mat4 look_at = mat4_look_at(s->camera.position, vec3_add(s->camera.position, s->camera.direction), s->camera.up);
-	t_mat4 view = mat4_crop_mat3(look_at);
-	t_mat4 projection = mat4_projection(TORAD(45.0f), 1.0f * screen_width / screen_height, 0.1f, 100.0f);
+	t_mat4 look_at;
+	t_mat4 view;
+	t_mat4 projection;
 
+	look_at = mat4_look_at(s->camera.position,
+		vec3_add(s->camera.position, s->camera.direction), s->camera.up);
+	view = mat4_crop_mat3(look_at);
+	projection = mat4_projection(TORAD(45.0f),
+		1.0f * screen_width / screen_height, 0.1f, 100.0f);
 	glDepthFunc(GL_LEQUAL);
 	set_mat4(program, "projection", projection);
 	set_mat4(program, "view", view);
@@ -681,35 +683,26 @@ void draw_skybox(t_scop *s, unsigned int size, unsigned int program)
 	glDepthFunc(GL_LESS);
 }
 
-
 void draw_object(t_scop *s, unsigned int size, unsigned int program)
 {
-	t_mat4 view = mat4_look_at(s->camera.position, vec3_add(s->camera.position, s->camera.direction), s->camera.up);
-	t_mat4 projection = mat4_projection(TORAD(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
+	t_mat4 view;
+	t_mat4 projection;
 
+	view = mat4_look_at(s->camera.position,
+		vec3_add(s->camera.position, s->camera.direction), s->camera.up);
+	projection = mat4_projection(TORAD(45.0f),
+		1.0f * screen_width / screen_height, 0.1f, 1000.0f);
 	if (!space_pressed)
-	{
-		t_mat4 rotate = mat4_rotate(s->model, vec3_init(0.0f, 1.0f, 0.0f), s->timer.delta_time * TORAD(55.0f)); 
-		s->model = mat4_mul_mat4(s->model, rotate);
-	}
-
+		s->model = mat4_rotate(s->model,
+			vec3_init(0.0f, 1.0f, 0.0f), s->timer.delta_time * TORAD(55.0f));
 	set_mat4(program, "projection", projection);
 	set_mat4(program, "view", view);
 	set_mat4(program, "model", s->model);
 	set_vec3(program, "lightPos", s->light.position);
 	set_int1(program, "mode", mode);
-
 	if (primitive_mode)
-	{
-		// system("leaks scop");
 		glDrawArrays(GL_TRIANGLES, 0, size);
-		// system("leaks scop");
-		glBindVertexArray(0);
-		// exit(1);
-	}
 	else
-	{
 		glDrawArrays(GL_LINES, 0, size);
-		glBindVertexArray(0);
-	}
+	glBindVertexArray(0);
 }

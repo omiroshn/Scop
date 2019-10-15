@@ -1,9 +1,21 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   init.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: omiroshn <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/10/15 15:59:48 by omiroshn          #+#    #+#             */
+/*   Updated: 2019/10/15 15:59:49 by omiroshn         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "scop.h"
 
-void init_glew(SDL_Window *window)
+void		init_glew(SDL_Window *window)
 {
-	SDL_GLContext context;
-	GLenum err;
+	SDL_GLContext	context;
+	GLenum			err;
 
 	context = SDL_GL_CreateContext(window);
 	glewExperimental = GL_TRUE;
@@ -13,10 +25,10 @@ void init_glew(SDL_Window *window)
 	ft_printf("Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 }
 
-SDL_Window *init_window()
+SDL_Window	*init_window(void)
 {
 	SDL_Window *window;
-	
+
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0)
 		put_error("Unable to initialize SDL.");
 	window = SDL_CreateWindow("SCOP",
@@ -39,6 +51,9 @@ SDL_Window *init_window()
 
 void		init_keys(short *key_states)
 {
-	for (int i = 0; i < 255; i++)
+	int i;
+
+	i = -1;
+	while (++i < 255)
 		key_states[i] = 0;
 }

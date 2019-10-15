@@ -1,33 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   error.c                                            :+:      :+:    :+:   */
+/*   vec4_geometry.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: omiroshn <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/10/15 15:59:13 by omiroshn          #+#    #+#             */
-/*   Updated: 2019/10/15 15:59:13 by omiroshn         ###   ########.fr       */
+/*   Created: 2019/10/15 15:47:26 by omiroshn          #+#    #+#             */
+/*   Updated: 2019/10/15 15:47:26 by omiroshn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "scop.h"
+#include "vecf.h"
 
-void	put_error(const char *msg)
+inline float	vec4_length(t_vec4 v)
 {
-	if (!msg)
-		exit(-1);
-	ft_printf("Error: %s\n", msg);
-	exit(-1);
+	return (MSQRT(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w));
 }
 
-void	print_link_error_info(GLuint program)
+inline t_vec4	vec4_mult_scalar(t_vec4 v, float c)
 {
-	GLsizei	size;
-	GLchar	log[4096];
+	return (vec4_mult(v, vec4_init_single(c)));
+}
 
-	ft_putendl("Shaders: Link stage failed.");
-	glGetProgramInfoLog(program, 4096, &size, log);
-	ft_putendl("Shaders: Program link log:");
-	ft_putendl(log);
-	put_error("Failed to read shaders. Program_success != GL_TRUE");
+inline t_vec4	vec4_normalize(t_vec4 v)
+{
+	return (vec4_mult_scalar(v, vec4_length(v)));
+}
+
+inline t_vec4	vec4_init_m128(__m128 m128)
+{
+	return ((t_vec4){.m128 = m128});
 }

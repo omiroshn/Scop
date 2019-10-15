@@ -43,23 +43,3 @@ inline t_vec4	vec4_mult(t_vec4 v1, t_vec4 v2)
 	result.w = v1.w * v2.w;
 	return (result);
 }
-
-inline float	vec4_length(t_vec4 v)
-{
-	return (MSQRT(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w));
-}
-
-inline t_vec4	vec4_mult_scalar(t_vec4 v, float c)
-{
-	return (vec4_mult(v, vec4_init_single(c)));
-}
-
-inline t_vec4	vec4_normalize(t_vec4 v)
-{
-	return (vec4_mult_scalar(v, vec4_length(v)));
-}
-
-inline t_vec4	vec4_init_m128(__m128 m128)
-{
-	return ((t_vec4){.m128 = m128});
-}
