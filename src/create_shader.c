@@ -18,7 +18,10 @@ static void		print_shader_compilation_info(const char *source, GLuint shader)
 	GLchar	log[4096];
 
 	glGetShaderInfoLog(shader, 4096, &size, log);
-	printf("Shader %s\ncompilation log:\n %s\n", source, log);
+	ft_putendl("Shaders: Compilation stage:");
+	ft_putendl(source);
+	ft_putendl("Compilation log:");
+	ft_putendl(log);
 }
 
 static GLuint	create_shader(const char *source, GLenum shader_type)
@@ -33,7 +36,7 @@ static GLuint	create_shader(const char *source, GLenum shader_type)
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &err);
 	if (err == GL_FALSE)
 	{
-		printf("Shader compilation failed.\n");
+		ft_putendl("Shader compilation failed");
 		print_shader_compilation_info(source, shader);
 		glDeleteShader(shader);
 		return (0);
@@ -41,82 +44,64 @@ static GLuint	create_shader(const char *source, GLenum shader_type)
 	return (shader);
 }
 
-static void		print_link_info(GLuint program)
-{
-	GLsizei	size;
-	GLchar	log[4096];
-
-	printf("Shaders: Link stage failed.\n");
-	glGetProgramInfoLog(program, 4096, &size, log);
-	printf("Shaders: Program link log:\n%s\n", log);
-}
-
-GLuint			create_program(const char *vert, const char *frag)
+static GLuint	create_program(const char *vert, const char *frag)
 {
 	GLuint	vert_shader;
 	GLuint	frag_shader;
-	GLint	programSuccess;
+	GLint	program_success;
 	GLuint	program;
 
 	if ((vert_shader = create_shader(vert, GL_VERTEX_SHADER)) == 0 ||
 		(frag_shader = create_shader(frag, GL_FRAGMENT_SHADER)) == 0)
-		return (0);
+		put_error("Failed to read shaders.");
 	program = glCreateProgram();
 	glAttachShader(program, vert_shader);
 	glAttachShader(program, frag_shader);
 	glDeleteShader(vert_shader);
 	glDeleteShader(frag_shader);
 	glLinkProgram(program);
-	programSuccess = GL_TRUE;
-	glGetProgramiv(program, GL_LINK_STATUS, &programSuccess);
-	if (programSuccess != GL_TRUE)
-	{
-		print_link_info(program);
-		return (0);
-	}
+	program_success = GL_TRUE;
+	glGetProgramiv(program, GL_LINK_STATUS, &program_success);
+	if (program_success != GL_TRUE)
+		print_link_error_info(program);
 	glValidateProgram(program);
 	return (program);
 }
 
-
-int   read_shaders(const char *vertex_path, const char *fragment_path)
+static int		check_shaders(int v_fd, int f_fd, size_t v_size, size_t f_size)
 {
-	char    *vertex_str = NULL;
-	char    *fragment_str = NULL;
-	struct  stat st;
-	int     v_size;
-	int     f_size;
-	
-	const int vertex_fd = open(vertex_path, O_RDONLY);
-	const int fragment_fd = open(fragment_path, O_RDONLY);
-	
-	stat(vertex_path, &st);
-	v_size = st.st_size;
-	stat(fragment_path, &st);
-	f_size = st.st_size;
-	
+	char	*vertex_str;
+	char	*fragment_str;
+	int		program;
+
 	vertex_str = (char*)malloc(v_size);
-	if (read(vertex_fd, vertex_str, v_size) < 0) {
-		perror("Shaders: Error in reading.\n");
-		return (0);
-	}
+	if (read(v_fd, vertex_str, v_size) < 0)
+		put_error("Failed to read shaders.");
 	vertex_str[v_size] = '\0';
-	
 	fragment_str = (char*)malloc(f_size);
-	if (read(fragment_fd, fragment_str, f_size) < 0) {
-		perror("Shaders: Error in reading.\n");
-		return (0);
-	}
+	if (read(f_fd, fragment_str, f_size) < 0)
+		put_error("Failed to read shaders.");
 	fragment_str[f_size] = '\0';
-	
-	int program;
 	program = create_program(vertex_str, fragment_str);
-	if (!program)
-	{
-		printf("Shaders: Failed to read shaders.\n");
-		return (0);
-	}
 	free(vertex_str);
 	free(fragment_str);
 	return (program);
+}
+
+int				read_shaders(const char *vertex_path, const char *fragment_path)
+{
+	int			vertex_fd;
+	int			fragment_fd;
+	struct stat	st_v;
+	struct stat	st_f;
+
+	if ((vertex_fd = open(vertex_path, O_RDONLY)) < 0
+		|| read(vertex_fd, NULL, 0) < 0)
+		put_error("Failed to open vertex shader.");
+	if ((fragment_fd = open(fragment_path, O_RDONLY)) < 0
+		|| read(fragment_fd, NULL, 0) < 0)
+		put_error("Failed to open fragment shader.");
+	stat(vertex_path, &st_v);
+	stat(fragment_path, &st_f);
+	return (check_shaders(vertex_fd, fragment_fd, st_v.st_size, st_f.st_size));
 }
