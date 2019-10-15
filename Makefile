@@ -10,13 +10,13 @@ OBJECTS = $(addprefix obj/, $(addsuffix .o, $(FILES)))
 WHOAMI = $(shell whoami)
 
 ifeq ($(WHOAMI), omiroshn)
-	PATH = ~/.brew/Cellar/
-	PATH_GLEW = $(PATH)glew/2.1.0/
-	PATH_SDL = $(PATH)sdl2/2.0.9_1/
+	LOCAL_PATH = ~/.brew/Cellar/
+	PATH_GLEW = $(LOCAL_PATH)glew/2.1.0/
+	PATH_SDL = $(LOCAL_PATH)sdl2/2.0.9_1/
 else
-	PATH = /usr/local/Cellar/
-	PATH_GLEW = $(PATH)glew/2.1.0/
-	PATH_SDL = $(PATH)sdl2/2.0.10/
+	LOCAL_PATH = /usr/local/Cellar/
+	PATH_GLEW = $(LOCAL_PATH)glew/2.1.0/
+	PATH_SDL = $(LOCAL_PATH)sdl2/2.0.10/
 endif
 
 INCLUDES = -I $(PATH_GLEW)include \
