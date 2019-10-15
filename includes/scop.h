@@ -47,6 +47,16 @@ typedef struct		s_vertex
 	t_vec2			texCoords;
 }					t_vertex;
 
+typedef struct		s_tmp_vertex
+{
+	t_vec4			*vertex;
+	t_vec2			*uv;
+	t_vec3			*normal;
+	GLushort		*vertex_indices;
+	GLushort		*uv_indices;
+	GLushort		*normal_indices;
+}					t_tmp_vertex;
+
 typedef struct		s_light
 {
 	t_vec3			position;

@@ -240,52 +240,170 @@ int get_size(char **sub)
 
 // или записывать сразу в 1
 
+
+int	get_faces(char *line)
+{
+	char			*cutted;
+	char			**sub;
+	char			*trimmed;
+	int				i;
+	int				faces_count;
+
+	faces_count = 0;
+	cutted = ft_strsub(line, 2, ft_strlen(line));
+	trimmed = ft_strtrim(cutted);
+	sub = ft_strsplit(trimmed, ' ');
+	i = 1;
+	while (i++ < get_size(sub) - 1)
+		faces_count += 3;
+	free(cutted);
+	free_strsplit(sub);
+	free(trimmed);
+	return (faces_count);
+}
+
 int get_size_of_obj(char *filename)
 {
-	int		fd;
-	int		faces_count;
-	char	*line;
+	int				fd;
+	char			*line;
+	int				faces;
 
 	ft_printf("Reading: %s\n", filename);
 	if ((fd = open(filename, O_RDONLY)) < 0 || read(fd, NULL, 0) < 0)
 		put_error("Failed to open file.");
-	faces_count = 0;
+	faces = 0;
 	while (get_next_line(fd, &line))
 	{
 		if (!(ft_strncmp(line, "f ", 2)))
-		{
-			char *cutted = ft_strsub(line, 2, ft_strlen(line));
-			char *trimmed = ft_strtrim(cutted);
-			char **sub = ft_strsplit(trimmed, ' ');
-			int i = 1;
-			while (i++ < get_size(sub) - 1)
-				faces_count += 3;
-			free(cutted);
-			free_strsplit(sub);
-			free(trimmed);
-		}
+			faces += get_faces(line);
 		free(line);
 	}
 	close(fd);
-	return (faces_count);
+	return (faces);
 }
 
-void load_obj(t_timer *timer, const char *filename, t_vertex *vertices, int size)
+t_vec4	cut_vertex_string(char *line)
 {
-	int		fd;
-	char 	*line;
-	char	**sub;
 	char	*cutted;
+	char	**sub;
+	t_vec4	vec;
+
+	cutted = ft_strsub(line, 2, ft_strlen(line));
+	sub = ft_strsplit(cutted, ' ');
+	vec = vec4_init(atof(sub[0]), atof(sub[1]), atof(sub[2]), 1.0f);
+	free_strsplit(sub);
+	free(cutted);
+	return (vec);
+}
+
+t_vec2	cut_texture_string(char *line)
+{
+	char	*cutted;
+	char	**sub;
+	t_vec2	vec;
+
+	cutted = ft_strsub(line, 3, ft_strlen(line));
+	sub = ft_strsplit(cutted, ' ');
+	vec = vec2_init(atof(sub[0]), atof(sub[1]));
+	free_strsplit(sub);
+	free(cutted);
+	return (vec);
+}
+
+t_vec3	cut_normal_string(char *line)
+{
+	char	*cutted;
+	char	**sub;
+	t_vec3	vec;
+
+	cutted = ft_strsub(line, 3, ft_strlen(line));
+	sub = ft_strsplit(cutted, ' ');
+	vec = vec3_init(atof(sub[0]), atof(sub[1]), atof(sub[2]));
+	free_strsplit(sub);
+	free(cutted);
+	return (vec);
+}
+
+void	cut_face_string(GLushort *vertex_indices, GLushort *uv_indices,
+			GLushort *normal_indices, char *line, int *faces_count)
+{
+	char	*cutted;
+	char	*trimmed;
+	char	**sub;
+	int		i;
+
+	cutted = ft_strsub(line, 2, ft_strlen(line));
+	trimmed = ft_strtrim(cutted);
+	sub = ft_strsplit(trimmed, ' ');
+	i = 0;
+	while (++i < get_size(sub) - 1)
+	{
+		parse(vertex_indices, uv_indices, normal_indices, sub[0], (*faces_count)++);
+		parse(vertex_indices, uv_indices, normal_indices, sub[i], (*faces_count)++);
+		parse(vertex_indices, uv_indices, normal_indices, sub[i + 1], (*faces_count)++);
+	}
+	free(cutted);
+	free_strsplit(sub);
+	free(trimmed);
+}
+
+void	init_temp_struct(t_tmp_vertex *v, int size)
+{
+	v->vertex = ft_memalloc(sizeof(t_vec4) * size);
+	v->uv = ft_memalloc(sizeof(t_vec2) * size);
+	v->normal = ft_memalloc(sizeof(t_vec3) * size);
+	v->vertex_indices = ft_memalloc(sizeof(GLushort) * size);
+	v->uv_indices = ft_memalloc(sizeof(GLushort) * size);
+	v->normal_indices = ft_memalloc(sizeof(GLushort) * size);
+}
+
+void	free_tmp_struct(t_tmp_vertex *v)
+{
+	free(v->vertex);
+	free(v->uv);
+	free(v->normal);
+	free(v->vertex_indices);
+	free(v->uv_indices);
+	free(v->normal_indices);
+}
+
+void	fill_vertex_array(t_vertex *vertices, t_tmp_vertex v, int size)
+{
+	int			j;
+	int			i;
+	t_vertex	vertex;
+
+	j = 0;
+	while (j < size && (i = -1))
+	{
+		while (++i < 3)
+		{
+			vertex.position = v.vertex[v.vertex_indices[j + i] - 1];
+			vertex.normal = vec3_init(0.0f, 0.0f, 0.0f);
+			vertex.texCoords = vec2_init(0.0f, 0.0f);
+			vertex.normal = v.normal[v.normal_indices[j + i] - 1];
+			if (&v.normal[0] == NULL)
+			{
+				vertex.normal.x = (v.vertex[v.vertex_indices[j + i] - 1].x + 1.2) / 2.4;
+				vertex.normal.y = (v.vertex[v.vertex_indices[j + i] - 1].y + 1.2) / 2.4;
+				vertex.normal.z = (v.vertex[v.vertex_indices[j + i] - 1].z + 1.2) / 2.4;
+			}	
+			if (&v.uv[0] != NULL)
+				vertex.texCoords = v.uv[v.uv_indices[j + i] - 1];
+			vertices[j + i] = vertex;
+		}
+		j += 3;
+	}
+}
+
+void	load_obj(t_timer *timer, const char *filename, t_vertex *vertices, int size)
+{
+	int				fd;
+	char 			*line;
+	t_tmp_vertex	v;
 
 	fd = open(filename, O_RDONLY);
-
-	GLushort *vertexIndices = ft_memalloc(sizeof(GLushort) * size);
-	GLushort *uvIndices = ft_memalloc(sizeof(GLushort) * size);
-	GLushort *normalIndices = ft_memalloc(sizeof(GLushort) * size);
-
-	t_vec4 *temp_positions = ft_memalloc(sizeof(t_vec4) * size);
-	t_vec3 *temp_normals = ft_memalloc(sizeof(t_vec3) * size);
-	t_vec2 *temp_tx = ft_memalloc(sizeof(t_vec2) * size);
+	init_temp_struct(&v, size);
 
 	int vertex_count = 0;
 	int texture_count = 0;
@@ -294,86 +412,19 @@ void load_obj(t_timer *timer, const char *filename, t_vertex *vertices, int size
 	while (get_next_line(fd, &line))
 	{
 		if (!(ft_strncmp(line, "v ", 2)))
-		{
-			cutted = ft_strsub(line, 2, ft_strlen(line));
-			sub = ft_strsplit(cutted, ' ');
-
-			temp_positions[vertex_count++] =
-				vec4_init(atof(sub[0]), atof(sub[1]),atof(sub[2]),1.0f);
-			free_strsplit(sub);
-			free(cutted);
-		}
+			v.vertex[vertex_count++] = cut_vertex_string(line);
 		else if (!(ft_strncmp(line, "vt ", 3)))
-		{
-			cutted = ft_strsub(line, 3, ft_strlen(line));
-			sub = ft_strsplit(cutted, ' ');
-			
-			temp_tx[texture_count++] = vec2_init(atof(sub[0]), atof(sub[1]));
-			free_strsplit(sub);
-			free(cutted);
-		}
+			v.uv[texture_count++] = cut_texture_string(line);
 		else if (!(ft_strncmp(line, "vn ", 3)))
-		{
-			cutted = ft_strsub(line, 3, ft_strlen(line));
-			sub = ft_strsplit(cutted, ' ');
-
-			temp_normals[normal_count++] =
-				vec3_init(atof(sub[0]), atof(sub[1]), atof(sub[2]));
-			free_strsplit(sub);
-			free(cutted);
-		}
+			v.normal[normal_count++] = cut_normal_string(line);
 		else if (!(ft_strncmp(line, "f ", 2)))
-		{
-			cutted = ft_strsub(line, 2, ft_strlen(line));
-			char *trimmed = ft_strtrim(cutted);
-			sub = ft_strsplit(trimmed, ' ');
-			int i = 0;
-			while (++i < get_size(sub) - 1)
-			{
-				parse(vertexIndices, uvIndices, normalIndices, sub[0], faces_count++);
-				parse(vertexIndices, uvIndices, normalIndices, sub[i], faces_count++);
-				parse(vertexIndices, uvIndices, normalIndices, sub[i + 1], faces_count++);
-				// ft_printf("\n");
-			}
-			free(cutted);
-			free_strsplit(sub);
-			free(trimmed);
-		}
+			cut_face_string(v.vertex_indices, v.uv_indices, v.normal_indices, line, &faces_count);
 		free(line);
 	}
-
-	for (int v = 0; v < size; v += 3)
-	{
-		for (unsigned int i = 0; i < 3; i += 1)
-		{
-			t_vec4 vertex = temp_positions[vertexIndices[v + i] - 1];
-			t_vec3 normal = vec3_init(0.0f,0.0f,0.0f);
-			t_vec2 uv = vec2_init(0.0f,0.0f);
-
-			if (&temp_normals[0] == NULL)
-			{
-				normal.x = (temp_positions[vertexIndices[v + i] - 1].x + 1.2)/2.4;
-				normal.y = (temp_positions[vertexIndices[v + i] - 1].y + 1.2)/2.4;
-				normal.z = (temp_positions[vertexIndices[v + i] - 1].z + 1.2)/2.4;
-			}
-			else
-				normal = temp_normals[normalIndices[v + i] - 1];
-
-			if (&temp_tx[0] != NULL)
-				uv = temp_tx[uvIndices[v + i] - 1];
-			
-			t_vertex ver = {vertex, normal, uv};
-			vertices[v + i] = ver;
-		}
-	}
+	fill_vertex_array(vertices, v, size);
 	update_time(timer);
-	printf("%s done in %.2f seconds\n", filename, timer->delta_time);
-	free(temp_positions);
-	free(temp_normals);
-	free(temp_tx);
-	free(vertexIndices);
-	free(normalIndices);
-	free(uvIndices);
+	ft_printf("%s done in %.2f seconds\n", filename, timer->delta_time);
+	free_tmp_struct(&v);
 }
 
 void print_vec3(t_vec3 vec)
@@ -410,7 +461,7 @@ int main(int argc, char **argv)
 	init_scop(&scop);
 	prepare_scene(scop);
 
-
+	//1 load obj
 	int obj_size = get_size_of_obj(argv[1]);
 	if (!obj_size)
 		put_error("Invalid obj file.");
@@ -419,6 +470,7 @@ int main(int argc, char **argv)
 	load_obj(&scop.timer, argv[1], vertices, obj_size);
 	t_binded bindedObj = set_up_object(vertices, obj_size);
 
+	//2 load skybox
 	int skybox_size = get_size_of_obj("res/models/cube/newCube.obj");
 	if (!skybox_size)
 		put_error("Invalid res/models/cube/newCube.obj skybox file.");
@@ -427,9 +479,11 @@ int main(int argc, char **argv)
 	load_obj(&scop.timer, "res/models/cube/newCube.obj", skybox_vertices, skybox_size);
 	t_binded cubemapObj = set_up_skybox(skybox_vertices, skybox_size);
 
+	//3 rotate model upsidesdown
 	scop.model = mat4_translate(mat4_identity(), vec3_init(0.0f, 0.0f, 0.0f));
 	scop.model = mat4_rotate(scop.model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f)); 
-	// scop.model = mat4_mul_mat4(scop.model, rotate);
+
+	//4 load textures from argv
 
 	char *texture_path = "res/models/dragon/dragon.png";
 	// const char *path = "res/models/dragon/meta.png";
@@ -443,17 +497,15 @@ int main(int argc, char **argv)
 		"res/models/Yokohama/posz.jpg",
 		"res/models/Yokohama/negz.jpg",
 	};
-
 	unsigned int objectTextureID = bind_texture(texture_path);
 	unsigned int skyboxTextureID = bind_cubemap(textures_faces);
 
+	//5
 	set_int1(cubemapObj.program, "cubemap", 0);
 	set_int1(bindedObj.program, "textureSampler", 0);
 	set_int1(bindedObj.program, "enviroMap", 1);
 
-
-
-
+	//6
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
