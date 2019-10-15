@@ -1,6 +1,6 @@
 NAME = scop
 
-CC = gcc
+CC = /usr/bin/clang
 FILES = main init create_shader shader_locations
 LIBFT_DIR = libft/
 MATH_DIR = ft_math/
@@ -43,22 +43,22 @@ $(NAME): $(LIBFT_DIR)libft.a $(MATH_DIR)ft_math.a $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBS) $(FRAMEWORKS) -o $(NAME)
 
 $(LIBFT_DIR)libft.a:
-	make -C -j4 --no-print-directory $(LIBFT_DIR)
+	@make -C $(LIBFT_DIR) -j4 --no-print-directory
 
 $(MATH_DIR)ft_math.a:
-	make -C -j4 --no-print-directory $(MATH_DIR)
+	@make -C $(MATH_DIR) -j4 --no-print-directory
 
 obj/%.o: src/%.c
 	$(CC) $(INCLUDES) -o $@ -c $^ -g
 
 clean:
-	rm -rf $(OBJECTS)
-	make clean -C -j4 --no-print-directory $(LIBFT_DIR)
-	make clean -C -j4 --no-print-directory $(MATH_DIR)
+	@/bin/rm -rf $(OBJECTS)
+	@make clean -C $(LIBFT_DIR) -j4 --no-print-directory
+	@make clean -C $(MATH_DIR) -j4 --no-print-directory
 
 fclean: clean
-	rm -rf $(NAME)
-	make fclean -C -j4 --no-print-directory $(LIBFT_DIR)
-	make fclean -C -j4 --no-print-directory $(MATH_DIR)
+	@/bin/rm -rf $(NAME)
+	@make fclean -C $(LIBFT_DIR) -j4 --no-print-directory
+	@make fclean -C $(MATH_DIR) -j4 --no-print-directory
 
 re: fclean all

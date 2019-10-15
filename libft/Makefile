@@ -14,7 +14,7 @@ NAME = libft.a
 
 FLAGS = -Wall -Wextra -Werror -Ofast
 
-CC = clang
+CC = /usr/bin/clang
 LIBFT = ft_atoi ft_bzero ft_countwords \
 		ft_isalpha ft_isdigit ft_isprint \
 		ft_itoa ft_itoa_base ft_lstnew \
@@ -70,29 +70,31 @@ HEADER_PRINTF = ./ft_printf/includes/ft_printf.h
 EOC=\033[0m
 BLUE=\033[1;34m
 YELLOW=\033[1;33m
-LGREEN=\033[1;32m
 GREEN=\033[32m
 RED=\033[31m
-LRED=\033[91m
-BRED=\033[1;31m
 
 all: $(NAME)
 
 .PHONY: all clean
-.NOTPARALLEL: all $(NAME) clean fclean re 
+# .NOTPARALLEL: all $(NAME) clean fclean re 
 
 $(NAME): $(OBJ_LIBFT) $(OBJ_PRINTF) $(HEADERS_LIBFT) $(HEADER_PRINTF)
-	@printf " $(RED)>$(EOC) $(GREEN)$(NAME) is ready.$(EOC)\n"
-	@ar rcs $(NAME) $(OBJ_LIBFT) $(OBJ_PRINTF)
-	@ranlib $(NAME)
+	@/usr/bin/printf " $(RED)>$(EOC) $(GREEN)$(NAME) is ready.$(EOC)\n"
+	@/usr/bin/ar rcs $(NAME) $(OBJ_LIBFT) $(OBJ_PRINTF)
+	@/usr/bin/ranlib $(NAME)
+
 $(OBJ_LIBFT): obj/%.o: src/%.c $(HEADERS_LIBFT)
 	@$(CC) -o $@ $(FLAGS) $(HEADERS) -c $<
-	@printf "$(BLUE).$(EOC)"
+	@/usr/bin/printf "$(BLUE).$(EOC)"
+
 $(OBJ_PRINTF): ft_printf/obj/%.o: ft_printf/src/%.c $(HEADER_PRINTF)
 	@$(CC) -o $@ $(FLAGS) $(HEADERS) -c $<
-	@printf "$(YELLOW).$(EOC)"
+	@/usr/bin/printf "$(YELLOW).$(EOC)"
+
 clean:
-	@rm -rf $(OBJ_LIBFT) $(OBJ_PRINTF)
+	@/bin/rm -rf $(OBJ_LIBFT) $(OBJ_PRINTF)
+
 fclean: clean
-	@rm -rf $(NAME)
+	@/bin/rm -rf $(NAME)
+
 re: fclean all
