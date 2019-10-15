@@ -11,97 +11,135 @@
 /* ************************************************************************** */
 
 #ifndef SCOP_H
-#define SCOP_H
+# define SCOP_H
 
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
+# include <GL/glew.h>
+# include <SDL2/SDL.h>
 
-#include "libft.h"
-#include "ft_math.h"
-#include "get_next_line.h"
+# include "libft.h"
+# include "ft_math.h"
+# include "get_next_line.h"
 
-#include <stdio.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+# include <stdio.h>
+# include <sys/stat.h>
+# include <fcntl.h>
+# include <unistd.h>
 
-#include <stdint.h>
-#include <mach/mach_time.h>
+# include <stdint.h>
+# include <mach/mach_time.h>
 
-#define degreesToRadians(angleDegrees) ((angleDegrees) * M_PI / 180.0)
-#define radiansToDegrees(angleRadians) ((angleRadians) * 180.0 / M_PI)
-#define get_offset(type, member) ((size_t)(&((type*)(1))->member)-1)
+# define get_offset(type, member) ((size_t)(&((type*)(1))->member)-1)
 
-typedef	struct	s_timer
+# define SCREEN_WIDTH 960.f
+# define SCREEN_HEIGHT 540.f
+
+
+typedef struct		s_binded
 {
-	uint64_t	start;
-	uint64_t	current;
-	uint64_t	current_time;
-	uint64_t	numer;
-	uint64_t	denom;
-	float		ttime;
-	float		old_time;
-	float		delta_time;
-}				t_timer;
+	unsigned int	vao;
+	unsigned int	program;
+}					t_binded;
 
-typedef struct	s_vertex
+typedef struct		s_vertex
 {
-	t_vec4   position;
-	t_vec3   normal;
-	t_vec2   texCoords;
-}				t_vertex;
+	t_vec4			position;
+	t_vec3			normal;
+	t_vec2			texCoords;
+}					t_vertex;
 
-typedef struct	s_binded
+typedef struct		s_light
 {
-	unsigned int vao;
-	unsigned int program;
-}				t_binded;
+	t_vec3			position;
+}					t_light;
 
-typedef struct	s_camera
+typedef struct		s_camera
 {
-	t_vec3 position;
-	t_vec3 direction;
-	t_vec3 right;
-	t_vec3 up;
-}				t_camera;
+	t_vec3			position;
+	t_vec3			direction;
+	t_vec3			right;
+	t_vec3			up;
+}					t_camera;
 
-typedef struct	s_light
+typedef	struct		s_timer
 {
-	t_vec3 position;
-}				t_light;
+	uint64_t		start;
+	uint64_t		current;
+	uint64_t		current_time;
+	uint64_t		numer;
+	uint64_t		denom;
+	float			ttime;
+	float			old_time;
+	float			delta_time;
+}					t_timer;
 
-typedef	struct	s_scop
+typedef	struct		s_scop
 {
-	short		key_states[256];
-	t_timer		timer;
-	t_camera	camera;
-	t_light		light;
-	t_mat4		model;
-	// vertices
-}				t_scop;
+	t_timer			timer;
+	t_camera		camera;
+	t_light			light;
+	t_mat4			model;
+	short			key_states[256];
+	short			program_is_running;
+	short			space_pressed;
+	short			primitive_mode;
+	short			mode;
+}					t_scop;
 
-void			init_keys(short *key_states);
-SDL_Window*		init_window();
-void			init_glew(SDL_Window *window);
+unsigned int		bind_cubemap(char **cubemap_faces);
+unsigned int		bind_texture(char *path);
+t_binded			set_up_object(t_vertex *vertices, int size);
+t_binded			set_up_skybox(t_vertex *vertices, int size);
 
-void		init_timer(t_timer *timer);
-void		update_time(t_timer *timer);
-float		time_elapsed(t_timer *timer);
+void				parse(GLushort *vertex_indices, GLushort *uv_indices,
+							GLushort *normal_indices, char *line, int index);
 
-void		put_error(const char *msg);
-void		print_link_error_info(GLuint program);
+char				**ft_strsplit(char const *s, char c);
+char				*ft_strtrim(char const *s);
+void				free_strsplit(char **str);
 
-char		**ft_strsplit(char const *s, char c);
-int			ft_array_length(char const *s, char c);
-char		*ft_strtrim(char const *s);
-void		free_strsplit(char **str);
-int   read_shaders(const char *vertex_path, const char *fragment_path);
+/*
+** draw.c
+*/
 
-void draw_object(t_scop *s, unsigned int size, unsigned int program);
-void draw_skybox(t_scop *s, unsigned int size, unsigned int program);
+void				draw_object(t_scop *s, unsigned int size, unsigned int program);
+void				draw_skybox(t_scop *s, unsigned int size, unsigned int program);
 
-void set_mat4(unsigned int program, const char *name, t_mat4 matrix);
-void set_vec3(unsigned int program, const char *name, t_vec3 vector);
-void set_int1(unsigned int program, const char *name, int value);
+/*
+** init.c
+*/
+
+void				init_keys(short *key_states);
+SDL_Window*			init_window();
+void				init_glew(SDL_Window *window);
+void				init_scop(t_scop *scop);
+
+/*
+** timer.c
+*/
+
+void				update_time(t_timer *timer);
+void				init_timer(t_timer *timer);
+float				time_elapsed(t_timer *timer);
+
+/*
+** timer.c
+*/
+
+void				put_error(const char *msg);
+void				print_link_error_info(GLuint program);
+
+/*
+** create_shader.c
+*/
+
+int   				read_shaders(const char *vertex_path, const char *fragment_path);
+
+/*
+** shader_locations.c
+*/
+
+void				set_mat4(unsigned int program, const char *name, t_mat4 matrix);
+void				set_vec3(unsigned int program, const char *name, t_vec3 vector);
+void				set_int1(unsigned int program, const char *name, int value);
 
 #endif

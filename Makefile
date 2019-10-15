@@ -1,7 +1,7 @@
 NAME = scop
 
 CC = /usr/bin/clang
-FILES = main init create_shader shader_locations error timer
+FILES = main init create_shader shader_locations error timer parse_obj helpers input_handler bind draw
 LIBFT_DIR = libft/
 MATH_DIR = ft_math/
 SRC = $(addprefix src/, $(addsuffix .c, $(FILES)))

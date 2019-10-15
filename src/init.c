@@ -45,7 +45,6 @@ SDL_Window	*init_window(void)
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 	SDL_GL_SetSwapInterval(1);
-	// SDL_SetRelativeMouseMode(SDL_TRUE);
 	return (window);
 }
 
@@ -56,4 +55,17 @@ void		init_keys(short *key_states)
 	i = -1;
 	while (++i < 255)
 		key_states[i] = 0;
+}
+
+void		init_scop(t_scop *scop)
+{
+	scop->camera.position = vec3_init(0.0f, -4.0f, 15.0f);
+	scop->camera.direction = vec3_init(0.0f, 0.0f, -1.0f);
+	scop->camera.right = vec3_init(-1.0f, 0.0f, 0.0f);
+	scop->camera.up = vec3_init(0.0f, -1.0f, 0.0f);
+	scop->light.position = vec3_init(0.0f, -10.0f, 0.0f);
+	scop->program_is_running = 1;
+	scop->space_pressed = 1;
+	scop->primitive_mode = 1;
+	scop->mode = 1;
 }

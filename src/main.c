@@ -12,15 +12,6 @@
 
 #include "scop.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
-int programIsRunning = 1;
-int screen_width = 960, screen_height = 540;
-int space_pressed = 1;
-int primitive_mode = 1;
-int mode = 1;
-
 // bool mRightButtonPressed = false;
 
 
@@ -29,10 +20,8 @@ int mode = 1;
 // t_vec3 cameraFront(0.0f, 0.0f, -1.0f);
 
 
-
-
-// float yaw   = 0.0f;
-// float pitch =  0.0f;
+float yaw   = 0.0f;
+float pitch =  0.0f;
 
 // void print_vec4(glm::vec4 vec)
 // {
@@ -49,18 +38,18 @@ void handle_events(t_scop *s)
 	while (SDL_PollEvent(&e))
 	{
 		if (e.type == SDL_QUIT || (e.type == SDL_KEYDOWN && e.key.keysym.scancode == SDL_SCANCODE_ESCAPE))
-			programIsRunning = 0;
+			s->program_is_running = 0;
 		else if (e.type == SDL_KEYDOWN)
 		{
 			s->key_states[e.key.keysym.scancode] = 1;
 			if (e.key.keysym.scancode == SDL_SCANCODE_LEFTBRACKET)
-				--mode < 1 ? mode = 6 : 0;
+				--s->mode < 1 ? s->mode = 6 : 0;
 			if (e.key.keysym.scancode == SDL_SCANCODE_RIGHTBRACKET)
-				++mode > 6 ? mode = 1 : 0;
+				++s->mode > 6 ? s->mode = 1 : 0;
 			if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
-				space_pressed ^= 1;
+				s->space_pressed ^= 1;
 			if (e.key.keysym.scancode == SDL_SCANCODE_P)
-				primitive_mode ^= 1;
+				s->primitive_mode ^= 1;
 		}
 		else if (e.type == SDL_KEYUP)
 			s->key_states[e.key.keysym.scancode] = 0;
@@ -112,9 +101,7 @@ void handle_events(t_scop *s)
 		}
 	}
 
-
 	float cameraSpeed = s->timer.delta_time * 5.f;
-
 	
 	/* camera movement */
 	if (s->key_states[SDL_SCANCODE_W])
@@ -204,64 +191,37 @@ void handle_events(t_scop *s)
 
 	// 	// print_vec(cameraUp);
 
-//  //    if (keyStates[SDL_SCANCODE_LEFT])
-// 	// 	yaw -= 1.f;
-// 	// if (keyStates[SDL_SCANCODE_RIGHT])
-// 	// 	yaw += 1.f;
-// 	// if (keyStates[SDL_SCANCODE_UP])
-// 	// 	pitch -= 1.f;
-// 	// if (keyStates[SDL_SCANCODE_DOWN])
-// 	// 	pitch += 1.f;
+    if (s->key_states[SDL_SCANCODE_LEFT])
+		yaw += 1.f;
+	if (s->key_states[SDL_SCANCODE_RIGHT])
+		yaw -= 1.f;
+	if (s->key_states[SDL_SCANCODE_UP])
+		pitch += 1.f;
+	if (s->key_states[SDL_SCANCODE_DOWN])
+		pitch -= 1.f;
 
-// 		// glm::vec3 front;
-// 		// // std::cout << "yaw " << cos(ceil(degreesToRadians(yaw))) << " " << ceil(degreesToRadians(yaw)) << " " << degreesToRadians(yaw) << " " << yaw << std::endl;
-// 	 //    front.x = sin(glm::radians(yaw)) * cos(glm::radians(-pitch));
-// 	 //    front.y = sin(glm::radians(-pitch));
-// 	 //    front.z = -cos(glm::radians(yaw)) * cos(glm::radians(-pitch));
+		// -cos(pitch * PI / 180.0) * sin(yaw * PI / 180.0)
+		// sin(pitch * PI / 180.0)
+		// -cos(pitch * PI / 180.0) * cos(yaw * PI / 180.0);
 
-// 	 //    // std::cout << "front " << front.x << " " << front.y << " " << front.z << std::endl;
-// 		// cameraDir = glm::normalize(front);
-// 	 //    cameraRight = glm::normalize(glm::cross(cameraDir, mWorldUp));
-// 	 //    cameraUp = glm::normalize(glm::cross(cameraRight, cameraDir));
-// 		// // std::cout << "cameraDir " << cameraDir.x << " " << cameraDir.y << " " << cameraDir.z << std::endl;
-// 		// // std::cout << "cameraRight " << cameraRight.x << " " << cameraRight.y << " " << cameraRight.z << std::endl;
-// 		// // std::cout << "cameraUp " << cameraUp.x << " " << cameraUp.y << " " << cameraUp.z << std::endl;
-// }
+
+
+		t_vec3 front;
+		// std::cout << "yaw " << cos(ceil(degreesToRadians(yaw))) << " " << ceil(degreesToRadians(yaw)) << " " << degreesToRadians(yaw) << " " << yaw << std::endl;
+	    front.x = -cos(TORAD(pitch)) * sin(TORAD(-yaw));
+	    front.y = sin(TORAD(-pitch));
+	    front.z = -cos(TORAD(pitch)) * cos(TORAD(-yaw));
+
+	    // std::cout << "front " << front.x << " " << front.y << " " << front.z << std::endl;
+		s->camera.direction = vec3_normalize(front);
+	    s->camera.right = vec3_normalize(vec3_cross(s->camera.direction, vec3_init(0.0f, -1.0f, 0.0f)));
+	    s->camera.up = vec3_normalize(vec3_cross(s->camera.right, s->camera.direction));
+		// std::cout << "cameraDir " << cameraDir.x << " " << cameraDir.y << " " << cameraDir.z << std::endl;
+		// std::cout << "cameraRight " << cameraRight.x << " " << cameraRight.y << " " << cameraRight.z << std::endl;
+		// std::cout << "cameraUp " << cameraUp.x << " " << cameraUp.y << " " << cameraUp.z << std::endl;
+
 }
 
-int	ft_array_length(char const *s, char c)
-{
-	unsigned int len;
-
-	len = 0;
-	while (*s)
-	{
-		if (*s == c)
-			++s;
-		else
-		{
-			++len;
-			while (*s && *s != c)
-				++s;
-		}
-	}
-	return (len);
-}
-
-int ft_chrcnt(char *line, char c)
-{
-	int i;
-	int cnt;
-
-	cnt = 0;
-	i = -1;
-	while (line[++i])
-	{
-		if (line[i] == c)
-			cnt++;
-	}
-	return (cnt);
-}
 
 int get_size(char **sub)
 {
@@ -271,46 +231,6 @@ int get_size(char **sub)
 	while (*++sub)
 		i++;
 	return (i);
-}
-
-void	free_strsplit(char **str)
-{
-	int i;
-
-	i = -1;
-	while (str[++i])
-		free(str[i]);
-	free(str);
-}
-
-void parse(GLushort *vertexIndices, GLushort *uvIndices, GLushort *normalIndices, char *line, int index)
-{
-	GLushort	a;
-	GLushort	b;
-	GLushort	c;
-	int			slashes;
-
-	slashes = ft_chrcnt(line, '/');
-	if (slashes)
-	{
-		char **s1 = ft_strsplit(line, '/');
-		int tmp_size = ft_array_length(line, '/');
-		a = atoi(s1[0]);
-		if (slashes == 1 || tmp_size == 3)
-			b = atoi(s1[1]);
-		if (slashes == 2 || tmp_size == 2)
-			c = atoi(s1[tmp_size == 2 ? 1 : 2]);
-		vertexIndices[index] = a;
-		uvIndices[index] = b;
-		normalIndices[index] = c;
-		free_strsplit(s1);
-	}
-	else
-	{
-		a = line ? atoi(line) : 4;
-		vertexIndices[index] = a;
-	}
-	// ft_printf("%d ", a);
 }
 
 // создать 3 массива под величины
@@ -456,105 +376,6 @@ void load_obj(t_timer *timer, const char *filename, t_vertex *vertices, int size
 	free(uvIndices);
 }
 
-unsigned int bind_cubemap(char **cubemap_faces)
-{
-	unsigned int	texture_id;
-	int				m_w;
-	int				m_h;
-	int				m_bpp;
-	unsigned char	*data;
-
-	glGenTextures(1, &texture_id);
-	glActiveTexture(GL_TEXTURE0 + 1);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
-	stbi_set_flip_vertically_on_load(0);
-	for (GLuint i = 0; i < 6; i++)
-	{
-		data = stbi_load(cubemap_faces[i], &m_w, &m_h, &m_bpp, 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
-			GL_RGBA, m_w, m_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		free(data);
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-	return (texture_id);
-}
-
-unsigned int bind_texture(char *path)
-{
-	unsigned int	texture_id;
-	int				m_w;
-	int				m_h;
-	int				m_bpp;
-	unsigned char	*data;
-
-	stbi_set_flip_vertically_on_load(1);
-	glGenTextures(1, &texture_id);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture_id);
-	data = stbi_load(path, &m_w, &m_h, &m_bpp, 4);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_w, m_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	free(data);
-	return (texture_id);
-}
-
-t_binded set_up_object(t_vertex *vertices, int size)
-{
-	unsigned int vao;
-	unsigned int vbo;
-	unsigned int program;
-
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, size * sizeof(t_vertex),
-			&vertices[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE,
-			sizeof(t_vertex), (void*)get_offset(t_vertex, position));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-			sizeof(t_vertex), (void*)get_offset(t_vertex, normal));
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
-			sizeof(t_vertex), (void*)get_offset(t_vertex, texCoords));
-	program = read_shaders(
-		"res/shaders/vertex_shader.glsl",
-		"res/shaders/fragment_shader.glsl");
-	return (t_binded){vao, program};
-}
-
-t_binded set_up_skybox(t_vertex *vertices, int size)
-{
-	unsigned int vao;
-	unsigned int vbo;
-	unsigned int program;
-
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, size * sizeof(t_vertex),
-			&vertices[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE,
-			sizeof(t_vertex), (void*)get_offset(t_vertex, position));
-	program = read_shaders(
-		"res/shaders/skybox.vt.glsl",
-		"res/shaders/skybox.fg.glsl");
-	return (t_binded){vao, program};
-}
-
 void print_vec3(t_vec3 vec)
 {
 	printf("%.0f %.0f %.0f\n", vec.x, vec.y, vec.z);
@@ -568,6 +389,13 @@ void print_mat4(t_mat4 mat)
 	printf("%f %f %f %f\n\n", mat.m41, mat.m42, mat.m43, mat.m44);
 }
 
+void prepare_scene(t_scop scop)
+{
+	
+
+	
+}
+
 int main(int argc, char **argv)
 {
 	t_scop		scop;
@@ -579,11 +407,9 @@ int main(int argc, char **argv)
 	init_glew(window);
 	init_timer(&scop.timer);
 	init_keys(scop.key_states);
-	scop.camera.position = vec3_init(0.0f, -4.0f, 15.0f);
-	scop.camera.direction = vec3_init(0.0f, 0.0f, -1.0f);
-	scop.camera.right = vec3_init(-1.0f, 0.0f, 0.0f);
-	scop.camera.up = vec3_init(0.0f, -1.0f, 0.0f);
-	scop.light.position = vec3_init(0.0f, -10.0f, 0.0f);
+	init_scop(&scop);
+	prepare_scene(scop);
+
 
 	int obj_size = get_size_of_obj(argv[1]);
 	if (!obj_size)
@@ -625,13 +451,16 @@ int main(int argc, char **argv)
 	set_int1(bindedObj.program, "textureSampler", 0);
 	set_int1(bindedObj.program, "enviroMap", 1);
 
+
+
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	// glDepthRange(1.0, 1.0);
 
-	while (programIsRunning)
+	while (scop.program_is_running)
 	{
 		glClearColor(1.0, 1.0, 1.0, 1.0);
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -662,47 +491,4 @@ int main(int argc, char **argv)
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 	return (0);
-}
-
-void draw_skybox(t_scop *s, unsigned int size, unsigned int program)
-{
-	t_mat4 look_at;
-	t_mat4 view;
-	t_mat4 projection;
-
-	look_at = mat4_look_at(s->camera.position,
-		vec3_add(s->camera.position, s->camera.direction), s->camera.up);
-	view = mat4_crop_mat3(look_at);
-	projection = mat4_projection(TORAD(45.0f),
-		1.0f * screen_width / screen_height, 0.1f, 100.0f);
-	glDepthFunc(GL_LEQUAL);
-	set_mat4(program, "projection", projection);
-	set_mat4(program, "view", view);
-	glDrawArrays(GL_TRIANGLES, 0, size);
-	glBindVertexArray(0);
-	glDepthFunc(GL_LESS);
-}
-
-void draw_object(t_scop *s, unsigned int size, unsigned int program)
-{
-	t_mat4 view;
-	t_mat4 projection;
-
-	view = mat4_look_at(s->camera.position,
-		vec3_add(s->camera.position, s->camera.direction), s->camera.up);
-	projection = mat4_projection(TORAD(45.0f),
-		1.0f * screen_width / screen_height, 0.1f, 1000.0f);
-	if (!space_pressed)
-		s->model = mat4_rotate(s->model,
-			vec3_init(0.0f, 1.0f, 0.0f), s->timer.delta_time * TORAD(55.0f));
-	set_mat4(program, "projection", projection);
-	set_mat4(program, "view", view);
-	set_mat4(program, "model", s->model);
-	set_vec3(program, "lightPos", s->light.position);
-	set_int1(program, "mode", mode);
-	if (primitive_mode)
-		glDrawArrays(GL_TRIANGLES, 0, size);
-	else
-		glDrawArrays(GL_LINES, 0, size);
-	glBindVertexArray(0);
 }
