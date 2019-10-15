@@ -12,9 +12,11 @@
 
 #include "scop.h"
 
-void set_vec3(unsigned int program, const char *name, t_vec3 vector)
+void	set_vec3(unsigned int program, const char *name, t_vec3 vector)
 {
-	int location = glGetUniformLocation(program, name);
+	int location;
+
+	location = glGetUniformLocation(program, name);
 	if (location == -1)
 	{
 		ft_dprintf(2, "Could not bind uniform %s\n", name);
@@ -23,10 +25,12 @@ void set_vec3(unsigned int program, const char *name, t_vec3 vector)
 	glUniform3fv(location, 1, &vector.x);
 }
 
-void set_mat4(unsigned int program, const char *name, t_mat4 matrix)
+void	set_mat4(unsigned int program, const char *name, t_mat4 matrix)
 {
+	int location;
+
 	glUseProgram(program);
-	int location = glGetUniformLocation(program, name);
+	location = glGetUniformLocation(program, name);
 	if (location == -1)
 	{
 		ft_dprintf(2, "Could not bind uniform %s\n", name);
@@ -35,10 +39,12 @@ void set_mat4(unsigned int program, const char *name, t_mat4 matrix)
 	glUniformMatrix4fv(location, 1, GL_FALSE, &matrix.v[0]);
 }
 
-void set_int1(unsigned int program, const char *name, int value)
+void	set_int1(unsigned int program, const char *name, int value)
 {
+	int location;
+
 	glUseProgram(program);
-	int location = glGetUniformLocation(program, name);
+	location = glGetUniformLocation(program, name);
 	if (location == -1)
 	{
 		ft_dprintf(2, "Could not bind uniform %s\n", name);

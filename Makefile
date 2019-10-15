@@ -11,13 +11,12 @@ WHOAMI = $(shell whoami)
 
 ifeq ($(WHOAMI), omiroshn)
 	LOCAL_PATH = ~/.brew/Cellar/
-	PATH_GLEW = $(LOCAL_PATH)glew/2.1.0/
-	PATH_SDL = $(LOCAL_PATH)sdl2/2.0.9_1/
 else
 	LOCAL_PATH = /usr/local/Cellar/
-	PATH_GLEW = $(LOCAL_PATH)glew/2.1.0/
-	PATH_SDL = $(LOCAL_PATH)sdl2/2.0.10/
 endif
+
+PATH_GLEW = $(LOCAL_PATH)glew/2.1.0/
+PATH_SDL = $(LOCAL_PATH)sdl2/2.0.10/
 
 INCLUDES = -I $(PATH_GLEW)include \
 	-I $(PATH_SDL)include \
