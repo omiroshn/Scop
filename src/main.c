@@ -40,6 +40,9 @@ int mode = 1;
 // 	std::cout << "x: " << vec.x << " y: " << vec.y << " z: " << vec.z << std::endl;
 // }
 
+float _pitch = 0;
+float _yaw = 0;
+
 void handle_events(t_scop *s)
 {
 	SDL_Event    e;
@@ -52,17 +55,9 @@ void handle_events(t_scop *s)
 		{
 			s->key_states[e.key.keysym.scancode] = 1;
 			if (e.key.keysym.scancode == SDL_SCANCODE_LEFTBRACKET)
-			{
-				mode -= 1;
-				if (mode < 1)
-					mode = 6;
-			}
+				--mode < 1 ? mode = 6 : 0;
 			if (e.key.keysym.scancode == SDL_SCANCODE_RIGHTBRACKET)
-			{
-				mode += 1;
-				if (mode > 6)
-					mode = 1;
-			}
+				++mode > 6 ? mode = 1 : 0;
 			if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
 				space_pressed ^= 1;
 			if (e.key.keysym.scancode == SDL_SCANCODE_P)
@@ -71,7 +66,28 @@ void handle_events(t_scop *s)
 		else if (e.type == SDL_KEYUP)
 			s->key_states[e.key.keysym.scancode] = 0;
 		else if (e.type == SDL_MOUSEMOTION)
-		{			
+		{
+			// float mouseX = (float)e.motion.x;
+   //          float mouseY = (float)e.motion.y;
+			// const float mouseX_Sensitivity = 0.25f;
+			// const float mouseY_Sensitivity = 0.25f;
+
+			// int tmpX, tmpY;
+			// SDL_GetMouseState (&tmpX, &tmpY);       // Mouse coords: [0,0] = top,left.
+			// _pitch += mouseY_Sensitivity * tmpY;  // mouse down:  -offset → reduce (add -).
+			// _yaw   += mouseY_Sensitivity * tmpX;  // mouse right: -offset → reduce (add -).
+   //  		printf("%.0f %.0f\n", _yaw , _pitch);
+
+   //  		if (_pitch >  90.0f) _pitch =  90.0f;
+   //  		if (_pitch < -90.0f) _pitch = -90.0f;
+   //  		if (_yaw  < -180.0f) _yaw  += 360.0f;
+   //  		if (_yaw  >  180.0f) _yaw  -= 360.0f;
+
+   //  		t_mat4 rotate = mat4_rotate(s->camera, vec3_init(-1.0f, 0.0f, 0.0f), _pitch);
+			// s->camera = mat4_mul_mat4(s->camera, rotate);
+			// rotate = mat4_rotate(s->camera, vec3_init(0.0f, -1.0f, 0.0f), _yaw);
+			// s->camera = mat4_mul_mat4(s->camera, rotate);
+
 			// t_vec3 up = vec3_init(s->camera.up.x, s->camera.up.y, s->camera.up.z);
 			// t_vec3 right = vec3_init(s->camera.right.x, s->camera.right.y, s->camera.right.z);
 			// t_quaternion q = quat_init_deg(up, -e.motion.xrel * s->timer.delta_time * 50);
@@ -186,9 +202,8 @@ void handle_events(t_scop *s)
 	// 	s->camera.up.y = up.y;
 	// 	s->camera.up.z = up.z;
 	// }
-}
 
-// 	// print_vec(cameraUp);
+	// 	// print_vec(cameraUp);
 
 //  //    if (keyStates[SDL_SCANCODE_LEFT])
 // 	// 	yaw -= 1.f;
@@ -213,6 +228,7 @@ void handle_events(t_scop *s)
 // 		// // std::cout << "cameraRight " << cameraRight.x << " " << cameraRight.y << " " << cameraRight.z << std::endl;
 // 		// // std::cout << "cameraUp " << cameraUp.x << " " << cameraUp.y << " " << cameraUp.z << std::endl;
 // }
+}
 
 int	ft_array_length(char const *s, char c)
 {
@@ -268,11 +284,7 @@ void	free_strsplit(char **str)
 	free(str);
 }
 
-void parse(GLushort *vertexIndices,
-		GLushort *uvIndices,
-		GLushort *normalIndices,
-		char *line,
-		int index)
+void parse(GLushort *vertexIndices, GLushort *uvIndices, GLushort *normalIndices, char *line, int index)
 {
 	GLushort	a;
 	GLushort	b;
@@ -299,7 +311,7 @@ void parse(GLushort *vertexIndices,
 		a = line ? atoi(line) : 4;
 		vertexIndices[index] = a;
 	}
-	ft_printf("%d ", a);
+	// ft_printf("%d ", a);
 }
 
 // создать 3 массива под величины
@@ -315,10 +327,9 @@ int get_size_of_obj(char *filename)
 	int		faces_count;
 	char	*line;
 
-	if ((fd = open(filename, O_RDONLY)) < 0) {
-		ft_printf("Error in opening file.\n");
-		exit(1);
-	}
+	ft_printf("Reading: %s\n", filename);
+	if ((fd = open(filename, O_RDONLY)) < 0 || read(fd, NULL, 0) < 0)
+		put_error("Failed to open file.");
 	faces_count = 0;
 	while (get_next_line(fd, &line))
 	{
@@ -340,7 +351,7 @@ int get_size_of_obj(char *filename)
 	return (faces_count);
 }
 
-void load_obj(const char *filename, t_vertex *vertices, int size)
+void load_obj(t_timer *timer, const char *filename, t_vertex *vertices, int size)
 {
 	int		fd;
 	char 	*line;
@@ -402,8 +413,8 @@ void load_obj(const char *filename, t_vertex *vertices, int size)
 			{
 				parse(vertexIndices, uvIndices, normalIndices, sub[0], faces_count++);
 				parse(vertexIndices, uvIndices, normalIndices, sub[i], faces_count++);
-				parse(vertexIndices, uvIndices, normalIndices, sub[i+1], faces_count++);
-				ft_printf("\n");
+				parse(vertexIndices, uvIndices, normalIndices, sub[i + 1], faces_count++);
+				// ft_printf("\n");
 			}
 			free(cutted);
 			free_strsplit(sub);
@@ -436,6 +447,8 @@ void load_obj(const char *filename, t_vertex *vertices, int size)
 			vertices[v + i] = ver;
 		}
 	}
+	update_time(timer);
+	printf("%s done in %.2f seconds\n", filename, timer->delta_time);
 	free(temp_positions);
 	free(temp_normals);
 	free(temp_tx);
@@ -519,10 +532,6 @@ t_binded set_up_object(t_vertex *vertices, int size)
 	program = read_shaders(
 		"res/shaders/vertex_shader.glsl",
 		"res/shaders/fragment_shader.glsl");
-	if (!program) {
-		printf("Failed to read shaders\n");
-		exit(0);
-	}
 	return (t_binded){vao, program};
 }
 
@@ -544,10 +553,6 @@ t_binded set_up_skybox(t_vertex *vertices, int size)
 	program = read_shaders(
 		"res/shaders/skybox.vt.glsl",
 		"res/shaders/skybox.fg.glsl");
-	if (!program) {
-		printf("Failed to read shaders\n");
-		exit(0);
-	}
 	return (t_binded){vao, program};
 }
 
@@ -571,7 +576,7 @@ int main(int argc, char **argv)
 
 	window = init_window();
 	if (!window)
-		return (-1);
+		put_error("Failed to init window.");
 	init_glew(window);
 	init_timer(&scop.timer);
 	init_keys(scop.key_states);
@@ -579,36 +584,27 @@ int main(int argc, char **argv)
 	scop.camera.direction = vec3_init(0.0f, 0.0f, -1.0f);
 	scop.camera.right = vec3_init(-1.0f, 0.0f, 0.0f);
 	scop.camera.up = vec3_init(0.0f, -1.0f, 0.0f);
-	
-	// t_vec3 lightPos(0.2, -1.0, 0.3);
-	scop.light.position = vec3_init(0.0,-10.0,0.0);
-	tick(&scop.timer);
-	int size = get_size_of_obj(argv[1]);
-	if (!size) {
-		ft_printf("Invalid obj file.\n");
-		return (0);
-	}
-	ft_printf("faces_count: %d\n", size);
-	t_vertex *vertices = ft_memalloc(sizeof(t_vertex) * size);
-	load_obj(argv[1], vertices, size);
-	t_binded bindedObj = set_up_object(vertices, size);
+	scop.light.position = vec3_init(0.0f, -10.0f, 0.0f);
 
-	scop.model = mat4_translate(mat4_identity(), vec3_init(0.0f, 0.0f, 0.0f));
-	// t_mat4 rotate = mat4_rotate(scop.model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f)); 
-	// scop.model = mat4_mul_mat4(scop.model, rotate);
-
-	print_mat4(scop.model);
-
+	int obj_size = get_size_of_obj(argv[1]);
+	if (!obj_size)
+		put_error("Invalid obj file.");
+	ft_printf("faces_count: %d\n", obj_size);
+	t_vertex *vertices = ft_memalloc(sizeof(t_vertex) * obj_size);
+	load_obj(&scop.timer, argv[1], vertices, obj_size);
+	t_binded bindedObj = set_up_object(vertices, obj_size);
 
 	int skybox_size = get_size_of_obj("res/models/cube/newCube.obj");
-	if (!skybox_size) {
-		ft_printf("Invalid res/models/cube/newCube.obj skybox file.\n");
-		return (0);
-	}
-	t_vertex *skybox_vertices = ft_memalloc(sizeof(t_vertex) * skybox_size);
-	load_obj("res/models/cube/newCube.obj", skybox_vertices, skybox_size);
-	t_binded cubemapObj = set_up_skybox(skybox_vertices, skybox_size);
+	if (!skybox_size)
+		put_error("Invalid res/models/cube/newCube.obj skybox file.");
 	ft_printf("faces_count: %d\n", skybox_size);
+	t_vertex *skybox_vertices = ft_memalloc(sizeof(t_vertex) * skybox_size);
+	load_obj(&scop.timer, "res/models/cube/newCube.obj", skybox_vertices, skybox_size);
+	t_binded cubemapObj = set_up_skybox(skybox_vertices, skybox_size);
+
+	scop.model = mat4_translate(mat4_identity(), vec3_init(0.0f, 0.0f, 0.0f));
+	t_mat4 rotate = mat4_rotate(scop.model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f)); 
+	scop.model = mat4_mul_mat4(scop.model, rotate);
 
 	char *texture_path = "res/models/dragon/dragon.png";
 	// const char *path = "res/models/dragon/meta.png";
@@ -635,14 +631,17 @@ int main(int argc, char **argv)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+	// glDepthRange(1.0, 1.0);
 
 	while (programIsRunning)
 	{
 		glClearColor(1.0, 1.0, 1.0, 1.0);
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		tick(&scop.timer);
+		update_time(&scop.timer);
 		handle_events(&scop);
+
+		//как сделать, чтобы скайбокс не перерисовывал обьект
 
 		glDisable(GL_DEPTH_TEST);
 		glBindVertexArray(cubemapObj.vao);
@@ -657,8 +656,7 @@ int main(int argc, char **argv)
 		glBindTexture(GL_TEXTURE_2D, objectTextureID);
 		glActiveTexture(GL_TEXTURE0 + 1);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
-		draw_object(&scop, size, bindedObj.program);
-		glBindVertexArray(0);
+		draw_object(&scop, obj_size, bindedObj.program);
 		SDL_GL_SwapWindow(window);
 	}
 	
@@ -689,20 +687,11 @@ void draw_object(t_scop *s, unsigned int size, unsigned int program)
 	t_mat4 view = mat4_look_at(s->camera.position, vec3_add(s->camera.position, s->camera.direction), s->camera.up);
 	t_mat4 projection = mat4_projection(TORAD(45.0f), 1.0f * screen_width / screen_height, 0.1f, 1000.0f);
 
-	// printf("view\n");
-	// print_mat4(view);
-	// printf("projection\n");
-	// print_mat4(projection);
-
-	// if (!space_pressed)
-	// {
-	// 	t_mat4 rotate = mat4_rotate(s->model, vec3_init(0.0f, 1.0f, 0.0f), s->timer.delta_time * TORAD(55.0f)); 
-	// 	s->model = mat4_mul_mat4(s->model, rotate);
-	// }
-		
-	// printf("model\n");
-	// print_mat4(s->model);
-
+	if (!space_pressed)
+	{
+		t_mat4 rotate = mat4_rotate(s->model, vec3_init(0.0f, 1.0f, 0.0f), s->timer.delta_time * TORAD(55.0f)); 
+		s->model = mat4_mul_mat4(s->model, rotate);
+	}
 
 	set_mat4(program, "projection", projection);
 	set_mat4(program, "view", view);
@@ -712,8 +701,11 @@ void draw_object(t_scop *s, unsigned int size, unsigned int program)
 
 	if (primitive_mode)
 	{
+		// system("leaks scop");
 		glDrawArrays(GL_TRIANGLES, 0, size);
+		// system("leaks scop");
 		glBindVertexArray(0);
+		// exit(1);
 	}
 	else
 	{

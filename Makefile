@@ -1,7 +1,7 @@
 NAME = scop
 
 CC = /usr/bin/clang
-FILES = main init create_shader shader_locations
+FILES = main init create_shader shader_locations error timer
 LIBFT_DIR = libft/
 MATH_DIR = ft_math/
 SRC = $(addprefix src/, $(addsuffix .c, $(FILES)))
@@ -21,7 +21,6 @@ endif
 
 INCLUDES = -I $(PATH_GLEW)include \
 	-I $(PATH_SDL)include \
-	-I vendor/stb_image \
 	-I includes \
 	-I libft/includes \
 	-I libft/ft_printf/includes \
@@ -31,9 +30,6 @@ LIBS = -L $(PATH_GLEW)lib \
 	-L $(PATH_SDL)lib \
 	$(LIBFT_DIR)libft.a \
 	$(MATH_DIR)ft_math.a
-
-MATH_HEADERS = -I vendor/ft_math/include
-MATH_LIB = ./vendor/ft_math/lib/ft_math.a
 
 FRAMEWORKS = -lglew -framework OpenGL -lsdl2
 

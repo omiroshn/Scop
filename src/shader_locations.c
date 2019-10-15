@@ -17,7 +17,7 @@ void set_vec3(unsigned int program, const char *name, t_vec3 vector)
 	int location = glGetUniformLocation(program, name);
 	if (location == -1)
 	{
-		fprintf(stderr, "Could not bind uniform %s\n", name);
+		ft_dprintf(2, "Could not bind uniform %s\n", name);
 		exit(0);
 	}
 	glUniform3fv(location, 1, &vector.x);
@@ -29,7 +29,7 @@ void set_mat4(unsigned int program, const char *name, t_mat4 matrix)
 	int location = glGetUniformLocation(program, name);
 	if (location == -1)
 	{
-		fprintf(stderr, "Could not bind uniform %s\n", name);
+		ft_dprintf(2, "Could not bind uniform %s\n", name);
 		exit(0);
 	}
 	glUniformMatrix4fv(location, 1, GL_FALSE, &matrix.v[0]);
@@ -41,7 +41,7 @@ void set_int1(unsigned int program, const char *name, int value)
 	int location = glGetUniformLocation(program, name);
 	if (location == -1)
 	{
-		fprintf(stderr, "Could not bind uniform %s\n", name);
+		ft_dprintf(2, "Could not bind uniform %s\n", name);
 		exit(0);
 	}
 	glUniform1i(location, value);

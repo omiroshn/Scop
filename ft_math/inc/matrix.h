@@ -23,36 +23,6 @@
 # define MAT3_SIZE 9
 # define MAT4_SIZE 16
 
-typedef struct	s_mat3
-{
-	union
-	{
-		struct
-		{
-			t_vec3 col[3];
-		};
-		struct
-		{
-			t_vec3 col0;
-			t_vec3 col1;
-			t_vec3 col2;
-		};
-		struct
-		{
-			float m11;
-			float m21;
-			float m31;
-			float m12;
-			float m22;
-			float m32;
-			float m13;
-			float m23;
-			float m33;
-		};
-        float v[MAT3_SIZE];
-	};
-}				t_mat3;
-
 typedef struct	s_mat4
 {
 	union
@@ -72,8 +42,8 @@ typedef struct	s_mat4
 		{
 			float m11;
 			float m12;
-			float m14;
 			float m13;
+			float m14;
 			float m21;
 			float m22;
 			float m23;

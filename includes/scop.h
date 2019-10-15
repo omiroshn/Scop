@@ -17,9 +17,20 @@
 #include <SDL2/SDL.h>
 
 #include "libft.h"
+#include "ft_math.h"
 #include "get_next_line.h"
+
+#include <stdio.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <stdint.h>
 #include <mach/mach_time.h>
+
+#define degreesToRadians(angleDegrees) ((angleDegrees) * M_PI / 180.0)
+#define radiansToDegrees(angleRadians) ((angleRadians) * 180.0 / M_PI)
+#define get_offset(type, member) ((size_t)(&((type*)(1))->member)-1)
 
 typedef	struct	s_timer
 {
@@ -32,8 +43,6 @@ typedef	struct	s_timer
 	float		old_time;
 	float		delta_time;
 }				t_timer;
-
-#include "ft_math.h"
 
 typedef struct	s_vertex
 {
@@ -71,31 +80,16 @@ typedef	struct	s_scop
 	// vertices
 }				t_scop;
 
-
 void			init_keys(short *key_states);
 SDL_Window*		init_window();
 void			init_glew(SDL_Window *window);
-void			init_timer(t_timer *timer);
-void			tick(t_timer *timer);
 
-// #include "glm/glm.hpp"
-// #include "glm/gtc/matrix_transform.hpp"
-// #include "glm/gtc/quaternion.hpp"
-// #include "glm/gtx/quaternion.hpp"
-// #include <glm/gtx/euler_angles.hpp>
+void		init_timer(t_timer *timer);
+void		update_time(t_timer *timer);
+float		time_elapsed(t_timer *timer);
 
-#include <stdio.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-// #include <fstream>
-// #include <sstream>
-// #include <vector>
-// #include <iostream>
-
-#define degreesToRadians(angleDegrees) ((angleDegrees) * M_PI / 180.0)
-#define radiansToDegrees(angleRadians) ((angleRadians) * 180.0 / M_PI)
-#define get_offset(type, member) ((size_t)(&((type*)(1))->member)-1)
+void		put_error(const char *msg);
+void		print_link_error_info(GLuint program);
 
 char		**ft_strsplit(char const *s, char c);
 int			ft_array_length(char const *s, char c);
