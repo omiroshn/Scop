@@ -96,18 +96,31 @@ void handle_events(t_scop *s)
 		s->camera.position = vec3_add(s->camera.position, vec3_mult_scalar(s->camera.up, cameraSpeed));
 
 	// /* light movement */
-	// if (s->key_states[SDL_SCANCODE_UP])
+	// if (s->key_states[SDL_SCANCODE_I])
 	// 	s->light.position += s->camera.direction * cameraSpeed;
-	// if (s->key_states[SDL_SCANCODE_DOWN])
+	// if (s->key_states[SDL_SCANCODE_K])
 	// 	s->light.position -= s->camera.direction * cameraSpeed;
-	// if (s->key_states[SDL_SCANCODE_RIGHT])
+	// if (s->key_states[SDL_SCANCODE_L])
 	// 	s->light.position += s->camera.right * cameraSpeed;
-	// if (s->key_states[SDL_SCANCODE_LEFT])
+	// if (s->key_states[SDL_SCANCODE_J])
 	// 	s->light.position -= s->camera.right * cameraSpeed;
-	// if (s->key_states[SDL_SCANCODE_O])
+	// if (s->key_states[SDL_SCANCODE_U])
 	// 	s->light.position += s->camera.up * cameraSpeed;
-	// if (s->key_states[SDL_SCANCODE_P])
+	// if (s->key_states[SDL_SCANCODE_O])
 	// 	s->light.position -= s->camera.up * cameraSpeed;
+
+	if (s->key_states[SDL_SCANCODE_I])
+		s->light.position = vec3_add(s->light.position, vec3_mult_scalar(s->camera.direction, cameraSpeed));
+	if (s->key_states[SDL_SCANCODE_K])
+		s->light.position = vec3_sub(s->light.position, vec3_mult_scalar(s->camera.direction, cameraSpeed));
+	if (s->key_states[SDL_SCANCODE_L])
+		s->light.position = vec3_add(s->light.position, vec3_mult_scalar(s->camera.right, cameraSpeed));
+	if (s->key_states[SDL_SCANCODE_J])
+		s->light.position = vec3_sub(s->light.position, vec3_mult_scalar(s->camera.right, cameraSpeed));
+	if (s->key_states[SDL_SCANCODE_U])
+		s->light.position = vec3_add(s->light.position, vec3_mult_scalar(s->camera.up, cameraSpeed));
+	if (s->key_states[SDL_SCANCODE_O])
+		s->light.position = vec3_sub(s->light.position, vec3_mult_scalar(s->camera.up, cameraSpeed));
 
 	if (s->key_states[SDL_SCANCODE_LEFT])
 		yaw += 1.f;
@@ -164,7 +177,7 @@ int main(int argc, char **argv)
 
 	//4 load textures from argv
 
-	char *texture_path = "res/models/dragon/dragon.png";
+	// char *texture_path = "res/models/dragon/dragon.png";
 	// const char *path = "res/models/dragon/meta.png";
 	// const char *path = "res/models/dragon/tea.png";
 	
@@ -176,7 +189,7 @@ int main(int argc, char **argv)
 		"res/models/Yokohama/posz.jpg",
 		"res/models/Yokohama/negz.jpg",
 	};
-	unsigned int objectTextureID = bind_texture(texture_path);
+	unsigned int objectTextureID = bind_texture(argv[2]);
 	unsigned int skyboxTextureID = bind_cubemap(textures_faces);
 
 	//5
