@@ -93,7 +93,7 @@ t_binded		set_up_object(t_vertex *vertices, int size)
 			sizeof(t_vertex), (void*)get_offset(t_vertex, normal));
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
-			sizeof(t_vertex), (void*)get_offset(t_vertex, texCoords));
+			sizeof(t_vertex), (void*)get_offset(t_vertex, tex_coords));
 	program = read_shaders(
 		"res/shaders/vertex_shader.glsl",
 		"res/shaders/fragment_shader.glsl");

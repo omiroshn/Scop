@@ -46,8 +46,7 @@ static int	ft_chrcnt(char *line, char c)
 	return (cnt);
 }
 
-void		parse(GLushort *vertex_indices, GLushort *uv_indices,
-			GLushort *normal_indices, char *line, int index)
+void		parse(t_tmp_vertex *v, char *line, int index)
 {
 	char	**s1;
 	int		slashes;
@@ -58,13 +57,54 @@ void		parse(GLushort *vertex_indices, GLushort *uv_indices,
 	{
 		s1 = ft_strsplit(line, '/');
 		tmp_size = ft_array_length(line, '/');
-		vertex_indices[index] = atoi(s1[0]);
+		v->vertex_indices[index] = atoi(s1[0]);
 		if (slashes == 1 || tmp_size == 3)
-			uv_indices[index] = atoi(s1[1]);
+			v->uv_indices[index] = atoi(s1[1]);
 		if (slashes == 2 || tmp_size == 2)
-			normal_indices[index] = atoi(s1[tmp_size == 2 ? 1 : 2]);
+			v->normal_indices[index] = atoi(s1[tmp_size == 2 ? 1 : 2]);
 		free_strsplit(s1);
 	}
 	else
-		vertex_indices[index] = line ? atoi(line) : 4;
+		v->vertex_indices[index] = line ? atoi(line) : 4;
+}
+
+int			get_faces(char *line)
+{
+	char	*cutted;
+	char	**sub;
+	char	*trimmed;
+	int		i;
+	int		faces_count;
+
+	faces_count = 0;
+	cutted = ft_strsub(line, 2, ft_strlen(line));
+	trimmed = ft_strtrim(cutted);
+	sub = ft_strsplit(trimmed, ' ');
+	i = 1;
+	while (i++ < get_size(sub) - 1)
+		faces_count += 3;
+	free(cutted);
+	free_strsplit(sub);
+	free(trimmed);
+	return (faces_count);
+}
+
+int			get_size_of_obj(char *filename)
+{
+	int		fd;
+	char	*line;
+	int		faces;
+
+	ft_printf("Reading: %s\n", filename);
+	if ((fd = open(filename, O_RDONLY)) < 0 || read(fd, NULL, 0) < 0)
+		put_error("Failed to open file.");
+	faces = 0;
+	while (get_next_line(fd, &line))
+	{
+		if (!(ft_strncmp(line, "f ", 2)))
+			faces += get_faces(line);
+		free(line);
+	}
+	close(fd);
+	return (faces);
 }

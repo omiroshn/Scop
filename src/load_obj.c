@@ -12,109 +12,81 @@
 
 #include "scop.h"
 
-void	load_obj(t_timer *timer, const char *filename,
-			t_vertex *vertices, int size)
+void	init_temp_struct(t_tmp_vertex *v, int size)
 {
-	int		fd;
-	char 	*line;
-	char	**sub;
-	char	*cutted;
+	v->vertex = ft_memalloc(sizeof(t_vec4) * size);
+	v->uv = ft_memalloc(sizeof(t_vec2) * size);
+	v->normal = ft_memalloc(sizeof(t_vec3) * size);
+	v->vertex_indices = ft_memalloc(sizeof(GLushort) * size);
+	v->uv_indices = ft_memalloc(sizeof(GLushort) * size);
+	v->normal_indices = ft_memalloc(sizeof(GLushort) * size);
+	v->vertex_count = 0;
+	v->texture_count = 0;
+	v->normal_count = 0;
+	v->faces_count = 0;
+}
+
+void	free_tmp_struct(t_tmp_vertex *v)
+{
+	free(v->vertex);
+	free(v->uv);
+	free(v->normal);
+	free(v->vertex_indices);
+	free(v->uv_indices);
+	free(v->normal_indices);
+}
+
+void	fill_vertex_array(t_vertex *vertices, t_tmp_vertex v, int size)
+{
+	int			j;
+	int			i;
+	t_vertex	vertex;
+
+	j = 0;
+	while (j < size && (i = -1))
+	{
+		while (++i < 3)
+		{
+			vertex.position = v.vertex[v.vertex_indices[j + i] - 1];
+			vertex.normal = vec3_init(0.0f, 0.0f, 0.0f);
+			vertex.tex_coords = vec2_init(0.0f, 0.0f);
+			vertex.normal = v.normal[v.normal_indices[j + i] - 1];
+			if (&v.normal[0] == NULL)
+			{
+				vertex.normal.x = KOEF(v.vertex[v.vertex_indices[j + i] - 1].x);
+				vertex.normal.y = KOEF(v.vertex[v.vertex_indices[j + i] - 1].y);
+				vertex.normal.z = KOEF(v.vertex[v.vertex_indices[j + i] - 1].z);
+			}
+			if (&v.uv[0] != NULL)
+				vertex.tex_coords = v.uv[v.uv_indices[j + i] - 1];
+			vertices[j + i] = vertex;
+		}
+		j += 3;
+	}
+}
+
+void	load_obj(t_timer *timer, char *filename, t_vertex *vertices, int size)
+{
+	int				fd;
+	char			*line;
+	t_tmp_vertex	v;
 
 	fd = open(filename, O_RDONLY);
-
-	GLushort *vertexIndices = ft_memalloc(sizeof(GLushort) * size);
-	GLushort *uvIndices = ft_memalloc(sizeof(GLushort) * size);
-	GLushort *normalIndices = ft_memalloc(sizeof(GLushort) * size);
-
-	t_vec4 *temp_positions = ft_memalloc(sizeof(t_vec4) * size);
-	t_vec3 *temp_normals = ft_memalloc(sizeof(t_vec3) * size);
-	t_vec2 *temp_tx = ft_memalloc(sizeof(t_vec2) * size);
-
-	int vertex_count = 0;
-	int texture_count = 0;
-	int normal_count = 0;
-	int faces_count = 0;
+	init_temp_struct(&v, size);
 	while (get_next_line(fd, &line))
 	{
 		if (!(ft_strncmp(line, "v ", 2)))
-		{
-			cutted = ft_strsub(line, 2, ft_strlen(line));
-			sub = ft_strsplit(cutted, ' ');
-
-			temp_positions[vertex_count++] =
-				vec4_init(atof(sub[0]), atof(sub[1]),atof(sub[2]),1.0f);
-			free_strsplit(sub);
-			free(cutted);
-		}
+			v.vertex[v.vertex_count++] = cut_vertex_string(line);
 		else if (!(ft_strncmp(line, "vt ", 3)))
-		{
-			cutted = ft_strsub(line, 3, ft_strlen(line));
-			sub = ft_strsplit(cutted, ' ');
-			
-			temp_tx[texture_count++] = vec2_init(atof(sub[0]), atof(sub[1]));
-			free_strsplit(sub);
-			free(cutted);
-		}
+			v.uv[v.texture_count++] = cut_texture_string(line);
 		else if (!(ft_strncmp(line, "vn ", 3)))
-		{
-			cutted = ft_strsub(line, 3, ft_strlen(line));
-			sub = ft_strsplit(cutted, ' ');
-
-			temp_normals[normal_count++] =
-				vec3_init(atof(sub[0]), atof(sub[1]), atof(sub[2]));
-			free_strsplit(sub);
-			free(cutted);
-		}
+			v.normal[v.normal_count++] = cut_normal_string(line);
 		else if (!(ft_strncmp(line, "f ", 2)))
-		{
-			cutted = ft_strsub(line, 2, ft_strlen(line));
-			char *trimmed = ft_strtrim(cutted);
-			sub = ft_strsplit(trimmed, ' ');
-			int i = 0;
-			while (++i < get_size(sub) - 1)
-			{
-				parse(vertexIndices, uvIndices, normalIndices, sub[0], faces_count++);
-				parse(vertexIndices, uvIndices, normalIndices, sub[i], faces_count++);
-				parse(vertexIndices, uvIndices, normalIndices, sub[i + 1], faces_count++);
-				// ft_printf("\n");
-			}
-			free(cutted);
-			free_strsplit(sub);
-			free(trimmed);
-		}
+			cut_face_string(&v, line, &v.faces_count);
 		free(line);
 	}
-
-	for (int v = 0; v < size; v += 3)
-	{
-		for (unsigned int i = 0; i < 3; i += 1)
-		{
-			t_vec4 vertex = temp_positions[vertexIndices[v + i] - 1];
-			t_vec3 normal = vec3_init(0.0f,0.0f,0.0f);
-			t_vec2 uv = vec2_init(0.0f,0.0f);
-
-			if (&temp_normals[0] == NULL)
-			{
-				normal.x = (temp_positions[vertexIndices[v + i] - 1].x + 1.2)/2.4;
-				normal.y = (temp_positions[vertexIndices[v + i] - 1].y + 1.2)/2.4;
-				normal.z = (temp_positions[vertexIndices[v + i] - 1].z + 1.2)/2.4;
-			}
-			else
-				normal = temp_normals[normalIndices[v + i] - 1];
-
-			if (&temp_tx[0] != NULL)
-				uv = temp_tx[uvIndices[v + i] - 1];
-			
-			t_vertex ver = {vertex, normal, uv};
-			vertices[v + i] = ver;
-		}
-	}
+	fill_vertex_array(vertices, v, size);
 	update_time(timer);
-	printf("%s done in %.2f seconds\n", filename, timer->delta_time);
-	free(temp_positions);
-	free(temp_normals);
-	free(temp_tx);
-	free(vertexIndices);
-	free(normalIndices);
-	free(uvIndices);
+	ft_printf("%s done in %.2f seconds\n", filename, timer->delta_time);
+	free_tmp_struct(&v);
 }

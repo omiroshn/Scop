@@ -32,7 +32,7 @@
 
 # define SCREEN_WIDTH 960.f
 # define SCREEN_HEIGHT 540.f
-
+# define KOEF(x) (x + 1.2f) / 2.4f
 
 typedef struct		s_binded
 {
@@ -44,7 +44,7 @@ typedef struct		s_vertex
 {
 	t_vec4			position;
 	t_vec3			normal;
-	t_vec2			texCoords;
+	t_vec2			tex_coords;
 }					t_vertex;
 
 typedef struct		s_tmp_vertex
@@ -55,6 +55,10 @@ typedef struct		s_tmp_vertex
 	GLushort		*vertex_indices;
 	GLushort		*uv_indices;
 	GLushort		*normal_indices;
+	int				vertex_count;
+	int				texture_count;
+	int				normal_count;
+	int				faces_count;
 }					t_tmp_vertex;
 
 typedef struct		s_light
@@ -95,29 +99,53 @@ typedef	struct		s_scop
 	short			mode;
 }					t_scop;
 
+/*
+** bind_obj.c
+*/
 unsigned int		bind_cubemap(char **cubemap_faces);
 unsigned int		bind_texture(char *path);
 t_binded			set_up_object(t_vertex *vertices, int size);
 t_binded			set_up_skybox(t_vertex *vertices, int size);
 
-void				parse(GLushort *vertex_indices, GLushort *uv_indices,
-							GLushort *normal_indices, char *line, int index);
+/*
+** parse_obj.c
+*/
+void				parse(t_tmp_vertex *v, char *line, int index);
+int					get_faces(char *line);
+int					get_size_of_obj(char *filename);
 
-char				**ft_strsplit(char const *s, char c);
-char				*ft_strtrim(char const *s);
+/*
+** helpers.c
+*/
 void				free_strsplit(char **str);
+int					get_size(char **sub);
+
+/*
+** cut_string.c
+*/
+void				cut_face_string(t_tmp_vertex *v, char *line, int *faces_count);
+t_vec3				cut_normal_string(char *line);
+t_vec2				cut_texture_string(char *line);
+t_vec4				cut_vertex_string(char *line);
+
+
+/*
+** load_obj.c
+*/
+void				load_obj(t_timer *timer, char *filename, t_vertex *vertices, int size);
+void				fill_vertex_array(t_vertex *vertices, t_tmp_vertex v, int size);
+void				free_tmp_struct(t_tmp_vertex *v);
+void				init_temp_struct(t_tmp_vertex *v, int size);
 
 /*
 ** draw.c
 */
-
 void				draw_object(t_scop *s, unsigned int size, unsigned int program);
 void				draw_skybox(t_scop *s, unsigned int size, unsigned int program);
 
 /*
 ** init.c
 */
-
 void				init_keys(short *key_states);
 SDL_Window*			init_window();
 void				init_glew(SDL_Window *window);
@@ -126,7 +154,6 @@ void				init_scop(t_scop *scop);
 /*
 ** timer.c
 */
-
 void				update_time(t_timer *timer);
 void				init_timer(t_timer *timer);
 float				time_elapsed(t_timer *timer);
@@ -134,20 +161,17 @@ float				time_elapsed(t_timer *timer);
 /*
 ** timer.c
 */
-
 void				put_error(const char *msg);
 void				print_link_error_info(GLuint program);
 
 /*
 ** create_shader.c
 */
-
 int   				read_shaders(const char *vertex_path, const char *fragment_path);
 
 /*
 ** shader_locations.c
 */
-
 void				set_mat4(unsigned int program, const char *name, t_mat4 matrix);
 void				set_vec3(unsigned int program, const char *name, t_vec3 vector);
 void				set_int1(unsigned int program, const char *name, int value);

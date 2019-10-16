@@ -21,3 +21,13 @@ void	free_strsplit(char **str)
 		free(str[i]);
 	free(str);
 }
+
+int		get_size(char **sub)
+{
+	int i;
+
+	i = 1;
+	while (*++sub)
+		i++;
+	return (i);
+}
