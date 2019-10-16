@@ -14,21 +14,19 @@
 
 void	draw_skybox(t_scop *s, unsigned int size, unsigned int program)
 {
-	t_mat4 look_at;
 	t_mat4 view;
 	t_mat4 projection;
 
-	look_at = mat4_look_at(s->camera.position,
-		vec3_add(s->camera.position, s->camera.direction), s->camera.up);
-	view = mat4_crop_mat3(look_at);
+	view = mat4_crop_mat3(mat4_look_at(s->camera.position,
+		vec3_add(s->camera.position, s->camera.direction), s->camera.up));
 	projection = mat4_projection(TORAD(45.0f),
 		1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
-	glDepthFunc(GL_LEQUAL);
 	set_mat4(program, "projection", projection);
 	set_mat4(program, "view", view);
+	glDepthFunc(GL_LEQUAL);
 	glDrawArrays(GL_TRIANGLES, 0, size);
-	glBindVertexArray(0);
 	glDepthFunc(GL_LESS);
+	glBindVertexArray(0);
 }
 
 void	draw_object(t_scop *s, unsigned int size, unsigned int program)

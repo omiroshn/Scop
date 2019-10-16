@@ -87,6 +87,6 @@ void	load_obj(t_timer *timer, char *filename, t_vertex *vertices, int size)
 	}
 	fill_vertex_array(vertices, v, size);
 	update_time(timer);
-	ft_printf("%s done in %.2f seconds\n", filename, timer->delta_time);
+	printf("%s done in %.2f seconds\n", filename, timer->delta_time);
 	free_tmp_struct(&v);
 }

@@ -19,6 +19,18 @@
 // t_vec3 mWorldRight(1.0f, 0.0f, 0.0f);
 // t_vec3 cameraFront(0.0f, 0.0f, -1.0f);
 
+// void print_vec3(t_vec3 vec)
+// {
+// 	printf("%.0f %.0f %.0f\n", vec.x, vec.y, vec.z);
+// }
+
+// void print_mat4(t_mat4 mat)
+// {
+// 	printf("%f %f %f %f\n", mat.m11, mat.m12, mat.m13, mat.m14);
+// 	printf("%f %f %f %f\n", mat.m21, mat.m22, mat.m23, mat.m24);
+// 	printf("%f %f %f %f\n", mat.m31, mat.m32, mat.m33, mat.m34);
+// 	printf("%f %f %f %f\n\n", mat.m41, mat.m42, mat.m43, mat.m44);
+// }
 
 float yaw   = 0.0f;
 float pitch =  0.0f;
@@ -56,6 +68,14 @@ void handle_events(t_scop *s)
 					pitch += 1.f;
 				else if (e.motion.yrel < 0)
 					pitch -= 1.f;
+
+				t_vec3 front;
+				front.x = -cos(TORAD(pitch)) * sin(TORAD(-yaw));
+				front.y = sin(TORAD(-pitch));
+				front.z = -cos(TORAD(pitch)) * cos(TORAD(-yaw));
+				s->camera.direction = vec3_normalize(front);
+				// s->camera.right = vec3_normalize(vec3_cross(s->camera.direction, vec3_init(0.0f, -1.0f, 0.0f)));
+				// s->camera.up = vec3_normalize(vec3_cross(s->camera.right, s->camera.direction));
 			}
 	}
 
@@ -97,28 +117,6 @@ void handle_events(t_scop *s)
 		pitch += 1.f;
 	if (s->key_states[SDL_SCANCODE_DOWN])
 		pitch -= 1.f;
-
-	t_vec3 front;
-	front.x = -cos(TORAD(pitch)) * sin(TORAD(-yaw));
-	front.y = sin(TORAD(-pitch));
-	front.z = -cos(TORAD(pitch)) * cos(TORAD(-yaw));
-	s->camera.direction = vec3_normalize(front);
-	s->camera.right = vec3_normalize(vec3_cross(s->camera.direction, vec3_init(0.0f, -1.0f, 0.0f)));
-	s->camera.up = vec3_normalize(vec3_cross(s->camera.right, s->camera.direction));
-
-}
-
-void print_vec3(t_vec3 vec)
-{
-	printf("%.0f %.0f %.0f\n", vec.x, vec.y, vec.z);
-}
-
-void print_mat4(t_mat4 mat)
-{
-	printf("%f %f %f %f\n", mat.m11, mat.m12, mat.m13, mat.m14);
-	printf("%f %f %f %f\n", mat.m21, mat.m22, mat.m23, mat.m24);
-	printf("%f %f %f %f\n", mat.m31, mat.m32, mat.m33, mat.m34);
-	printf("%f %f %f %f\n\n", mat.m41, mat.m42, mat.m43, mat.m44);
 }
 
 void prepare_scene(t_scop scop)
@@ -188,15 +186,15 @@ int main(int argc, char **argv)
 
 	//6
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LESS);
 	// glDepthRange(1.0, 1.0);
 
 	while (scop.program_is_running)
 	{
 		glClearColor(1.0, 1.0, 1.0, 1.0);
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		update_time(&scop.timer);
 		handle_events(&scop);
@@ -208,7 +206,6 @@ int main(int argc, char **argv)
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
 		draw_skybox(&scop, skybox_size, cubemapObj.program);
-		glBindVertexArray(0);
 		
 		glEnable(GL_DEPTH_TEST);
 		glBindVertexArray(bindedObj.vao);
@@ -220,7 +217,6 @@ int main(int argc, char **argv)
 		SDL_GL_SwapWindow(window);
 	}
 	
-	system("leaks scop");
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 	return (0);

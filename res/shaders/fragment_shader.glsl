@@ -77,12 +77,20 @@ void main()
 			out_Colour = mix(out_Colour, enviroColour, 0.8);
 		}
 	} else if (mode == 5) { //normal
-		out_Colour = vec4(pass_normal, 1.0);
-		// vec3 color = triplanarMapping(textureSampler, pass_normal, Position_worldspace);
-		// out_Colour = vec4(color, 1.0);
+		if (pass_normal.x == 0 && pass_normal.y == 0 && pass_normal.z == 0) {
+			out_Colour = vec4(Position_worldspace, 1.0);
+		} else {
+			out_Colour = vec4(pass_normal, 1.0);
+		}
 	} else if (mode == 6) { //grey
-		float grey = (pass_normal.x + pass_normal.y+ pass_normal.z) / 3.0;
-		vec3 g = vec3(grey, grey, grey);
-		out_Colour = vec4(g, 1.0);
+		if (pass_normal.x == 0 && pass_normal.y == 0 && pass_normal.z == 0) {
+			float grey = (Position_worldspace.x + Position_worldspace.y+ Position_worldspace.z) / 3.0;
+			vec3 g = vec3(grey, grey, grey);
+			out_Colour = vec4(g, 1.0);
+		} else {
+			float grey = (pass_normal.x + pass_normal.y+ pass_normal.z) / 3.0;
+			vec3 g = vec3(grey, grey, grey);
+			out_Colour = vec4(g, 1.0);
+		}
 	}
 }

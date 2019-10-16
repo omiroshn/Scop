@@ -14,6 +14,7 @@ FILES = main \
 		draw \
 		load_obj \
 		cut_string
+
 LIBFT_DIR = libft/
 MATH_DIR = ft_math/
 SRC = $(addprefix src/, $(addsuffix .c, $(FILES)))
