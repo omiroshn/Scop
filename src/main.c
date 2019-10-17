@@ -74,8 +74,8 @@ void handle_events(t_scop *s)
 				front.y = sin(TORAD(-pitch));
 				front.z = -cos(TORAD(pitch)) * cos(TORAD(-yaw));
 				s->camera.direction = vec3_normalize(front);
-				// s->camera.right = vec3_normalize(vec3_cross(s->camera.direction, vec3_init(0.0f, -1.0f, 0.0f)));
-				// s->camera.up = vec3_normalize(vec3_cross(s->camera.right, s->camera.direction));
+				s->camera.right = vec3_normalize(vec3_cross(s->camera.direction, vec3_init(0.0f, -1.0f, 0.0f)));
+				s->camera.up = vec3_normalize(vec3_cross(s->camera.right, s->camera.direction));
 			}
 	}
 
