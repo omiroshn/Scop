@@ -106,5 +106,6 @@ int			get_size_of_obj(char *filename)
 		free(line);
 	}
 	close(fd);
+	ft_printf("faces_count: %d\n", faces);
 	return (faces);
 }

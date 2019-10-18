@@ -132,7 +132,7 @@ t_vec4				cut_vertex_string(char *line);
 /*
 ** load_obj.c
 */
-void				load_obj(t_timer *timer, char *filename, t_vertex *vertices, int size);
+t_binded			load_obj(t_timer *timer, char *filename, int size, short skybox);
 void				fill_vertex_array(t_vertex *vertices, t_tmp_vertex v, int size);
 void				free_tmp_struct(t_tmp_vertex *v);
 void				init_temp_struct(t_tmp_vertex *v, int size);

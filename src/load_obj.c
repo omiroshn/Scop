@@ -12,7 +12,7 @@
 
 #include "scop.h"
 
-void	init_temp_struct(t_tmp_vertex *v, int size)
+void		init_temp_struct(t_tmp_vertex *v, int size)
 {
 	v->vertex = ft_memalloc(sizeof(t_vec4) * size);
 	v->uv = ft_memalloc(sizeof(t_vec2) * size);
@@ -26,7 +26,7 @@ void	init_temp_struct(t_tmp_vertex *v, int size)
 	v->faces_count = 0;
 }
 
-void	free_tmp_struct(t_tmp_vertex *v)
+void		free_tmp_struct(t_tmp_vertex *v)
 {
 	free(v->vertex);
 	free(v->uv);
@@ -36,7 +36,7 @@ void	free_tmp_struct(t_tmp_vertex *v)
 	free(v->normal_indices);
 }
 
-void	fill_vertex_array(t_vertex *vertices, t_tmp_vertex v, int size)
+void		fill_vertex_array(t_vertex *vertices, t_tmp_vertex v, int size)
 {
 	int			j;
 	int			i;
@@ -65,11 +65,12 @@ void	fill_vertex_array(t_vertex *vertices, t_tmp_vertex v, int size)
 	}
 }
 
-void	load_obj(t_timer *timer, char *filename, t_vertex *vertices, int size)
+t_binded	load_obj(t_timer *timer, char *filename, int size, short skybox)
 {
 	int				fd;
 	char			*line;
 	t_tmp_vertex	v;
+	t_vertex		*verti;
 
 	fd = open(filename, O_RDONLY);
 	init_temp_struct(&v, size);
@@ -85,8 +86,10 @@ void	load_obj(t_timer *timer, char *filename, t_vertex *vertices, int size)
 			cut_face_string(&v, line, &v.faces_count);
 		free(line);
 	}
-	fill_vertex_array(vertices, v, size);
+	verti = ft_memalloc(sizeof(t_vertex) * size);
+	fill_vertex_array(verti, v, size);
 	update_time(timer);
 	printf("%s done in %.2f seconds\n", filename, timer->delta_time);
 	free_tmp_struct(&v);
+	return (skybox ? set_up_skybox(verti, size) : set_up_object(verti, size));
 }

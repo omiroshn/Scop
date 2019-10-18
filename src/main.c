@@ -35,6 +35,12 @@
 float yaw   = 0.0f;
 float pitch =  0.0f;
 
+float mouseOffsetX = 0.0f;
+float mouseOffsetY = 0.0f;
+float prevMousePosX = 0.0f;
+float prevMousePosY = 0.0f;
+float mouseSensitivity = 0.05f;
+
 void handle_events(t_scop *s)
 {
 	SDL_Event    e;
@@ -60,14 +66,20 @@ void handle_events(t_scop *s)
 		else if (e.type == SDL_MOUSEMOTION)
 			if (e.motion.state & SDL_BUTTON_LMASK)
 			{
+				// mouseOffsetX = (e.motion.x - prevMousePosX);
+				// mouseOffsetY = (prevMousePosY - e.motion.y);
+
+				// prevMousePosX = (e.motion.x);
+				// prevMousePosY = (e.motion.y);
+
 				if (e.motion.xrel > 0)
-					yaw += 1.f;
+					yaw -= 1.0f;
 				else if (e.motion.xrel < 0)
-					yaw -= 1.f;
+					yaw += 1.0f;
 				if (e.motion.yrel > 0)
-					pitch += 1.f;
+					pitch -= 1.0f;
 				else if (e.motion.yrel < 0)
-					pitch -= 1.f;
+					pitch += 1.0f;
 
 				t_vec3 front;
 				front.x = -cos(TORAD(pitch)) * sin(TORAD(-yaw));
@@ -157,30 +169,19 @@ int main(int argc, char **argv)
 	int obj_size = get_size_of_obj(argv[1]);
 	if (!obj_size)
 		put_error("Invalid obj file.");
-	ft_printf("faces_count: %d\n", obj_size);
-	t_vertex *vertices = ft_memalloc(sizeof(t_vertex) * obj_size);
-	load_obj(&scop.timer, argv[1], vertices, obj_size);
-	t_binded bindedObj = set_up_object(vertices, obj_size);
+	t_binded bindedObj = load_obj(&scop.timer, argv[1], obj_size, 0);
 
 	//2 load skybox
 	int skybox_size = get_size_of_obj("res/models/cube/newCube.obj");
 	if (!skybox_size)
 		put_error("Invalid res/models/cube/newCube.obj skybox file.");
-	ft_printf("faces_count: %d\n", skybox_size);
-	t_vertex *skybox_vertices = ft_memalloc(sizeof(t_vertex) * skybox_size);
-	load_obj(&scop.timer, "res/models/cube/newCube.obj", skybox_vertices, skybox_size);
-	t_binded cubemapObj = set_up_skybox(skybox_vertices, skybox_size);
+	t_binded cubemapObj = load_obj(&scop.timer, "res/models/cube/newCube.obj", skybox_size, 1);
 
 	//3 rotate model upsidesdown
 	scop.model = mat4_translate(mat4_identity(), vec3_init(0.0f, 0.0f, 0.0f));
 	scop.model = mat4_rotate(scop.model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f)); 
 
-	//4 load textures from argv
-
-	// char *texture_path = "res/models/dragon/dragon.png";
-	// const char *path = "res/models/dragon/meta.png";
-	// const char *path = "res/models/dragon/tea.png";
-	
+	//4 load textures from argv	
 	char *textures_faces[] = {
 		"res/models/Yokohama/posx.jpg",
 		"res/models/Yokohama/negx.jpg",
@@ -202,7 +203,6 @@ int main(int argc, char **argv)
 	glEnable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LESS);
-	// glDepthRange(1.0, 1.0);
 
 	while (scop.program_is_running)
 	{
