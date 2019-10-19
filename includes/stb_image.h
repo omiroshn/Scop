@@ -6343,7 +6343,9 @@ static stbi_uc *stbi__gif_load_next(stbi__context *s, stbi__gif *g, int *comp, i
    int dispose; 
    int first_frame; 
    int pi; 
-   int pcount; 
+   int pcount;
+
+   req_comp++; 
 
    // on first frame, any non-written pixels get the background colour (non-transparent)
    first_frame = 0; 
@@ -6583,7 +6585,7 @@ static void *stbi__gif_load(stbi__context *s, int *x, int *y, int *comp, int req
    // free buffers needed for multiple frame loading; 
    STBI_FREE(g.history);
    STBI_FREE(g.background); 
-
+   (void)ri;
    return u;
 }
 

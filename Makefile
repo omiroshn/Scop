@@ -1,5 +1,7 @@
 NAME = scop
 
+FLAGS = -Wall -Wextra -Werror
+
 CC = /usr/bin/clang
 FILES = main \
 		init \
@@ -57,7 +59,7 @@ $(MATH_DIR)ft_math.a:
 	@make -C $(MATH_DIR) -j4 --no-print-directory
 
 obj/%.o: src/%.c
-	$(CC) $(INCLUDES) -o $@ -c $^ -g
+	$(CC) $(FLAGS) $(INCLUDES) -o $@ -c $^ -g
 
 clean:
 	@/bin/rm -rf $(OBJECTS)

@@ -13,11 +13,17 @@
 #include "scop.h"
 #include "stb_image.h"
 
-static void		for_each(char **cubemap_faces, int m_w, int m_h, int m_bpp)
+static void		for_each(const char **cubemap_faces)
 {
 	int				i;
 	unsigned char	*data;
+	int				m_w;
+	int				m_h;
+	int				m_bpp;
 
+	m_w = 0;
+	m_h = 0;
+	m_bpp = 0;
 	i = -1;
 	while (++i < 6)
 	{
@@ -28,18 +34,23 @@ static void		for_each(char **cubemap_faces, int m_w, int m_h, int m_bpp)
 	}
 }
 
-unsigned int	bind_cubemap(char **cubemap_faces)
+unsigned int	bind_cubemap(void)
 {
+	const char		*cubemap_faces[] = {
+		"res/models/Yokohama/posx.jpg",
+		"res/models/Yokohama/negx.jpg",
+		"res/models/Yokohama/posy.jpg",
+		"res/models/Yokohama/negy.jpg",
+		"res/models/Yokohama/posz.jpg",
+		"res/models/Yokohama/negz.jpg",
+	};
 	unsigned int	texture_id;
-	int				m_w;
-	int				m_h;
-	int				m_bpp;
 
 	glGenTextures(1, &texture_id);
 	glActiveTexture(GL_TEXTURE0 + 1);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
 	stbi_set_flip_vertically_on_load(0);
-	for_each(cubemap_faces, m_w, m_h, m_bpp);
+	for_each(cubemap_faces);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

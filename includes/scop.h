@@ -97,12 +97,18 @@ typedef	struct		s_scop
 	short			space_pressed;
 	short			primitive_mode;
 	short			mode;
+	int				obj_size;
+	int				skybox_size;
+	unsigned int	objectTextureID;
+	unsigned int	skyboxTextureID;
+	t_binded		bindedObj;
+	t_binded		cubemapObj;
 }					t_scop;
 
 /*
 ** bind_obj.c
 */
-unsigned int		bind_cubemap(char **cubemap_faces);
+unsigned int		bind_cubemap();
 unsigned int		bind_texture(char *path);
 t_binded			set_up_object(t_vertex *vertices, int size);
 t_binded			set_up_skybox(t_vertex *vertices, int size);

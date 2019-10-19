@@ -51,6 +51,8 @@ static GLuint	create_program(const char *vert, const char *frag)
 	GLint	program_success;
 	GLuint	program;
 
+	vert_shader = 0;
+	frag_shader = 0;
 	if ((vert_shader = create_shader(vert, GL_VERTEX_SHADER)) == 0 ||
 		(frag_shader = create_shader(frag, GL_FRAGMENT_SHADER)) == 0)
 		put_error("Failed to read shaders.");

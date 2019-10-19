@@ -12,26 +12,6 @@
 
 #include "scop.h"
 
-// bool mRightButtonPressed = false;
-
-
-// t_vec3 mWorldUp(0.0f, 1.0f, 0.0f);
-// t_vec3 mWorldRight(1.0f, 0.0f, 0.0f);
-// t_vec3 cameraFront(0.0f, 0.0f, -1.0f);
-
-// void print_vec3(t_vec3 vec)
-// {
-// 	printf("%.0f %.0f %.0f\n", vec.x, vec.y, vec.z);
-// }
-
-// void print_mat4(t_mat4 mat)
-// {
-// 	printf("%f %f %f %f\n", mat.m11, mat.m12, mat.m13, mat.m14);
-// 	printf("%f %f %f %f\n", mat.m21, mat.m22, mat.m23, mat.m24);
-// 	printf("%f %f %f %f\n", mat.m31, mat.m32, mat.m33, mat.m34);
-// 	printf("%f %f %f %f\n\n", mat.m41, mat.m42, mat.m43, mat.m44);
-// }
-
 float yaw   = 0.0f;
 float pitch =  0.0f;
 
@@ -144,11 +124,23 @@ void handle_events(t_scop *s)
 		pitch -= 1.f;
 }
 
-void prepare_scene(t_scop scop)
+void prepare_scene(t_scop *scop, char *filename, char *texture_filename)
 {
-	
-
-	
+	scop->obj_size = get_size_of_obj(filename);
+	if (!scop->obj_size)
+		put_error("Invalid obj file.");
+	scop->bindedObj = load_obj(&scop->timer, filename, scop->obj_size, 0);
+	scop->skybox_size = get_size_of_obj("res/models/cube/newCube.obj");
+	if (!scop->skybox_size)
+		put_error("Invalid res/models/cube/newCube.obj skybox file.");
+	scop->cubemapObj = load_obj(&scop->timer, "res/models/cube/newCube.obj", scop->skybox_size, 1);
+	scop->model = mat4_translate(mat4_identity(), vec3_init(0.0f, 0.0f, 0.0f));
+	scop->model = mat4_rotate(scop->model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f));
+	scop->objectTextureID = bind_texture(texture_filename);
+	scop->skyboxTextureID = bind_cubemap();
+	set_int1(scop->cubemapObj.program, "cubemap", 0);
+	set_int1(scop->bindedObj.program, "textureSampler", 0);
+	set_int1(scop->bindedObj.program, "enviroMap", 1);
 }
 
 int main(int argc, char **argv)
@@ -163,40 +155,7 @@ int main(int argc, char **argv)
 	init_timer(&scop.timer);
 	init_keys(scop.key_states);
 	init_scop(&scop);
-	prepare_scene(scop);
-
-	//1 load obj
-	int obj_size = get_size_of_obj(argv[1]);
-	if (!obj_size)
-		put_error("Invalid obj file.");
-	t_binded bindedObj = load_obj(&scop.timer, argv[1], obj_size, 0);
-
-	//2 load skybox
-	int skybox_size = get_size_of_obj("res/models/cube/newCube.obj");
-	if (!skybox_size)
-		put_error("Invalid res/models/cube/newCube.obj skybox file.");
-	t_binded cubemapObj = load_obj(&scop.timer, "res/models/cube/newCube.obj", skybox_size, 1);
-
-	//3 rotate model upsidesdown
-	scop.model = mat4_translate(mat4_identity(), vec3_init(0.0f, 0.0f, 0.0f));
-	scop.model = mat4_rotate(scop.model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f)); 
-
-	//4 load textures from argv	
-	char *textures_faces[] = {
-		"res/models/Yokohama/posx.jpg",
-		"res/models/Yokohama/negx.jpg",
-		"res/models/Yokohama/posy.jpg",
-		"res/models/Yokohama/negy.jpg",
-		"res/models/Yokohama/posz.jpg",
-		"res/models/Yokohama/negz.jpg",
-	};
-	unsigned int objectTextureID = bind_texture(argv[2]);
-	unsigned int skyboxTextureID = bind_cubemap(textures_faces);
-
-	//5
-	set_int1(cubemapObj.program, "cubemap", 0);
-	set_int1(bindedObj.program, "textureSampler", 0);
-	set_int1(bindedObj.program, "enviroMap", 1);
+	prepare_scene(&scop, argv[1], argv[2]);
 
 	//6
 	glEnable(GL_BLEND);
@@ -215,21 +174,21 @@ int main(int argc, char **argv)
 		//как сделать, чтобы скайбокс не перерисовывал обьект
 
 		glDisable(GL_DEPTH_TEST);
-		glBindVertexArray(cubemapObj.vao);
+		glBindVertexArray(scop.cubemapObj.vao);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
-		draw_skybox(&scop, skybox_size, cubemapObj.program);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
+		draw_skybox(&scop, scop.skybox_size, scop.cubemapObj.program);
 		
 		glEnable(GL_DEPTH_TEST);
-		glBindVertexArray(bindedObj.vao);
+		glBindVertexArray(scop.bindedObj.vao);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, objectTextureID);
+		glBindTexture(GL_TEXTURE_2D, scop.objectTextureID);
 		glActiveTexture(GL_TEXTURE0 + 1);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
-		draw_object(&scop, obj_size, bindedObj.program);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
+		draw_object(&scop, scop.obj_size, scop.bindedObj.program);
 		SDL_GL_SwapWindow(window);
 	}
-	
+	argc++;
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 	return (0);
