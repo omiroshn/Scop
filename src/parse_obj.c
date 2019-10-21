@@ -57,11 +57,16 @@ void		parse(t_tmp_vertex *v, char *line, int index)
 	{
 		s1 = ft_strsplit(line, '/');
 		tmp_size = ft_array_length(line, '/');
-		v->vertex_indices[index] = atoi(s1[0]);
+		v->vertex_indices[index] = s1[0] ? atoi(s1[0]) : 0;
 		if (slashes == 1 || tmp_size == 3)
-			v->uv_indices[index] = atoi(s1[1]);
+			v->uv_indices[index] = s1[1] ? atoi(s1[1]) : 0;
 		if (slashes == 2 || tmp_size == 2)
-			v->normal_indices[index] = atoi(s1[tmp_size == 2 ? 1 : 2]);
+		{
+			if (tmp_size == 2)
+				v->normal_indices[index] = s1[1] ? atoi(s1[1]) : 0;
+			else
+				v->normal_indices[index] = s1[2] ? atoi(s1[2]) : 0;
+		}
 		free_strsplit(s1);
 	}
 	else
