@@ -12,9 +12,6 @@
 
 #include "scop.h"
 
-float yaw   = 0.0f;
-float pitch =  0.0f;
-
 float mouseOffsetX = 0.0f;
 float mouseOffsetY = 0.0f;
 float prevMousePosX = 0.0f;
@@ -47,18 +44,18 @@ void handle_events(t_scop *s)
 			if (e.motion.state & SDL_BUTTON_LMASK)
 			{
 				if (e.motion.xrel > 0)
-					yaw -= 1.0f;
+					s->camera.pitch += 0.02f;
 				else if (e.motion.xrel < 0)
-					yaw += 1.0f;
+					s->camera.pitch -= 0.02f;
 				if (e.motion.yrel > 0)
-					pitch -= 1.0f;
+					s->camera.yaw += 0.02f;
 				else if (e.motion.yrel < 0)
-					pitch += 1.0f;
+					s->camera.yaw -= 0.02f;
 
 				t_vec3 front;
-				front.x = -cos(TORAD(pitch)) * sin(TORAD(-yaw));
-				front.y = sin(TORAD(-pitch));
-				front.z = -cos(TORAD(pitch)) * cos(TORAD(-yaw));
+				front.x = -cos(TORAD(s->camera.pitch)) * sin(TORAD(-s->camera.yaw));
+				front.y = sin(TORAD(-s->camera.pitch));
+				front.z = -cos(TORAD(s->camera.pitch)) * cos(TORAD(-s->camera.yaw));
 				s->camera.direction = vec3_normalize(front);
 				s->camera.right = vec3_normalize(vec3_cross(s->camera.direction, vec3_init(0.0f, -1.0f, 0.0f)));
 				s->camera.up = vec3_normalize(vec3_cross(s->camera.right, s->camera.direction));
@@ -109,13 +106,13 @@ void handle_events(t_scop *s)
 		s->light.position = vec3_sub(s->light.position, vec3_mult_scalar(s->camera.up, cameraSpeed));
 
 	if (s->key_states[SDL_SCANCODE_LEFT])
-		yaw += 1.f;
+		s->camera.pitch += 0.02f;
 	if (s->key_states[SDL_SCANCODE_RIGHT])
-		yaw -= 1.f;
+		s->camera.pitch -= 0.02f;
 	if (s->key_states[SDL_SCANCODE_UP])
-		pitch += 1.f;
+		s->camera.yaw += 0.02f;
 	if (s->key_states[SDL_SCANCODE_DOWN])
-		pitch -= 1.f;
+		s->camera.yaw -= 0.02f;
 }
 
 void prepare_scene(t_scop *scop, char *filename, char *texture_filename)
@@ -128,8 +125,10 @@ void prepare_scene(t_scop *scop, char *filename, char *texture_filename)
 	if (!scop->skybox_size)
 		put_error("Invalid res/models/cube/newCube.obj skybox file.");
 	scop->cubemapObj = load_obj(&scop->timer, "res/models/cube/newCube.obj", scop->skybox_size, 1);
-	scop->model = mat4_translate(mat4_identity(), vec3_init(0.0f, 0.0f, 0.0f));
+	scop->model = mat4_translate(vec3_init(0.0f, 0.0f, 0.0f));
 	scop->model = mat4_rotate(scop->model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f));
+	scop->skybox_translate = mat4_translate(scop->camera.position);
+	scop->skybox_translate = mat4_rotate(scop->skybox_translate, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f));
 	scop->objectTextureID = bind_texture(texture_filename);
 	scop->skyboxTextureID = bind_cubemap();
 	set_int1(scop->cubemapObj.program, "cubemap", 0);
@@ -173,13 +172,13 @@ int main(int argc, char **argv)
 		glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
 		draw_skybox(&scop, scop.skybox_size, scop.cubemapObj.program);
 		
-		// glEnable(GL_DEPTH_TEST);
-		// glBindVertexArray(scop.bindedObj.vao);
-		// glActiveTexture(GL_TEXTURE0);
-		// glBindTexture(GL_TEXTURE_2D, scop.objectTextureID);
-		// glActiveTexture(GL_TEXTURE0 + 1);
-		// glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
-		// draw_object(&scop, scop.obj_size, scop.bindedObj.program);
+		glEnable(GL_DEPTH_TEST);
+		glBindVertexArray(scop.bindedObj.vao);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, scop.objectTextureID);
+		glActiveTexture(GL_TEXTURE0 + 1);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
+		draw_object(&scop, scop.obj_size, scop.bindedObj.program);
 		SDL_GL_SwapWindow(window);
 	}
 	argc++;
