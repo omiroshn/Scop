@@ -37,6 +37,7 @@ LIBFT = ft_atoi ft_bzero ft_countwords \
 		ft_strsplit ft_atoi_base ft_isascii \
 		ft_rgb_to_int ft_rgb_smooth ft_isalnum \
 		ft_sort_argv ft_print_bits get_next_line \
+		ft_strclen ft_strlen_safe
 
 LIBFT_PRINTF =  ft_printf \
 				ft_vprintf \

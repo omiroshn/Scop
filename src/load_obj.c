@@ -73,6 +73,7 @@ t_binded	load_obj(t_timer *timer, char *filename, int size, short skybox)
 	t_vertex		*verti;
 
 	fd = open(filename, O_RDONLY);
+	printf("SIZE: %d\n", size);
 	init_temp_struct(&v, size);
 	while (get_next_line(fd, &line))
 	{

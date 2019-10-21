@@ -1,6 +1,6 @@
 NAME = scop
 
-FLAGS = -Wall -Wextra -Werror
+# FLAGS = -Wall -Wextra -Werror
 
 CC = /usr/bin/clang
 FILES = main \
