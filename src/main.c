@@ -46,12 +46,6 @@ void handle_events(t_scop *s)
 		else if (e.type == SDL_MOUSEMOTION)
 			if (e.motion.state & SDL_BUTTON_LMASK)
 			{
-				// mouseOffsetX = (e.motion.x - prevMousePosX);
-				// mouseOffsetY = (prevMousePosY - e.motion.y);
-
-				// prevMousePosX = (e.motion.x);
-				// prevMousePosY = (e.motion.y);
-
 				if (e.motion.xrel > 0)
 					yaw -= 1.0f;
 				else if (e.motion.xrel < 0)
@@ -179,13 +173,13 @@ int main(int argc, char **argv)
 		glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
 		draw_skybox(&scop, scop.skybox_size, scop.cubemapObj.program);
 		
-		glEnable(GL_DEPTH_TEST);
-		glBindVertexArray(scop.bindedObj.vao);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, scop.objectTextureID);
-		glActiveTexture(GL_TEXTURE0 + 1);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
-		draw_object(&scop, scop.obj_size, scop.bindedObj.program);
+		// glEnable(GL_DEPTH_TEST);
+		// glBindVertexArray(scop.bindedObj.vao);
+		// glActiveTexture(GL_TEXTURE0);
+		// glBindTexture(GL_TEXTURE_2D, scop.objectTextureID);
+		// glActiveTexture(GL_TEXTURE0 + 1);
+		// glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
+		// draw_object(&scop, scop.obj_size, scop.bindedObj.program);
 		SDL_GL_SwapWindow(window);
 	}
 	argc++;
