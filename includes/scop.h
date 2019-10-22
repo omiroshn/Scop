@@ -76,6 +76,9 @@ typedef struct		s_camera
 	t_vec3			direction;
 	t_vec3			right;
 	t_vec3			up;
+	float	yaw;
+	float	pitch;
+	float	roll;
 }					t_camera;
 
 typedef	struct		s_timer
@@ -107,6 +110,8 @@ typedef	struct		s_scop
 	unsigned int	skyboxTextureID;
 	t_binded		bindedObj;
 	t_binded		cubemapObj;
+	t_mat4			projection;
+	t_mat4			skybox_translate;
 }					t_scop;
 
 /*

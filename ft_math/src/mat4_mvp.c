@@ -50,26 +50,12 @@ inline t_mat4	mat4_projection(float fov, float aspect, float near, float far)
 	return (res);
 }
 
-inline t_mat4	mat4_translate(t_mat4 mat, t_vec3 vec)
+inline t_mat4	mat4_translate(t_vec3 vec)
 {
-	t_mat4	res;
+	t_mat4 res;
 
-	res.m11 = mat.m11;
-	res.m21 = mat.m21;
-	res.m31 = mat.m31;
-	res.m41 = mat.m41;
-	res.m12 = mat.m12;
-	res.m22 = mat.m22;
-	res.m32 = mat.m32;
-	res.m42 = mat.m42;
-	res.m13 = mat.m13;
-	res.m23 = mat.m23;
-	res.m33 = mat.m33;
-	res.m43 = mat.m43;
-	res.m14 = mat.m14 + vec.x;
-	res.m24 = mat.m24 + vec.y;
-	res.m34 = mat.m34 + vec.z;
-	res.m44 = mat.m44;
+	res = mat4_identity();
+	res.col[3] = vec4_init(vec.x, vec.y, vec.z, 1.0f);
 	return (res);
 }
 
@@ -117,5 +103,28 @@ inline t_mat4	mat4_rotate(t_mat4 mat, t_vec3 vec, float axis)
 	res.m34 = 0.0f;
 	res.m44 = 1.0f;
 	res = mat4_mul_mat4(mat, res);
+	return (res);
+}
+
+inline t_mat4	mat4_transpose(t_mat4 m)
+{
+	t_mat4		res;
+
+	res.m11 = m.m11;
+	res.m21 = m.m12;
+	res.m31 = m.m13;
+	res.m41 = m.m14;
+	res.m12 = m.m21;
+	res.m22 = m.m22;
+	res.m32 = m.m23;
+	res.m42 = m.m24;
+	res.m13 = m.m31;
+	res.m23 = m.m32;
+	res.m33 = m.m33;
+	res.m43 = m.m34;
+	res.m14 = m.m41;
+	res.m24 = m.m42;
+	res.m34 = m.m43;
+	res.m44 = m.m44;
 	return (res);
 }

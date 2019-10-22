@@ -60,10 +60,16 @@ void		init_keys(short *key_states)
 
 void		init_scop(t_scop *scop)
 {
+
 	scop->camera.position = vec3_init(0.0f, -4.0f, 15.0f);
 	scop->camera.direction = vec3_init(0.0f, 0.0f, -1.0f);
 	scop->camera.right = vec3_init(-1.0f, 0.0f, 0.0f);
 	scop->camera.up = vec3_init(0.0f, -1.0f, 0.0f);
+	scop->camera.yaw = 0.0f;
+	scop->camera.pitch = 0.0f;
+	scop->camera.roll = 0.0f;
+	scop->projection = mat4_projection(TORAD(45.0f),
+		1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 1000.0f);
 	scop->light.position = vec3_init(0.0f, -10.0f, 0.0f);
 	scop->program_is_running = 1;
 	scop->space_pressed = 1;

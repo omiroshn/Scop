@@ -61,14 +61,16 @@ typedef struct	s_mat4
 	};
 }				t_mat4;
 
+t_mat4			mat4_transpose(t_mat4 m);
 t_mat4			mat4_from_vec4(t_vec4 *v);
 t_mat4			mat4_with_value(float value);
 t_mat4			mat4_identity(void);
 t_mat4			mat4_crop_mat3(t_mat4 mat);
+t_mat4			mat4_euler_angle_xyz(float t1, float t2, float t3);
 
 t_mat4      	mat4_look_at(t_vec3 eye, t_vec3 target, t_vec3 up_dir);
 t_mat4			mat4_projection(float fov, float aspect, float near, float far);
-t_mat4			mat4_translate(t_mat4 mat, t_vec3 vec);
+t_mat4			mat4_translate(t_vec3 vec);
 t_mat4			mat4_rotate(t_mat4 mat, t_vec3 vec, float axis);
 t_mat4			mat4_mul_mat4(t_mat4 m1, t_mat4 m2);
 

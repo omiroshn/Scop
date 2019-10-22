@@ -12,9 +12,6 @@
 
 #include "scop.h"
 
-float yaw   = 0.0f;
-float pitch =  0.0f;
-
 float mouseOffsetX = 0.0f;
 float mouseOffsetY = 0.0f;
 float prevMousePosX = 0.0f;
@@ -135,13 +132,13 @@ void handle_events(t_scop *s)
 	// 	s->light.position = vec3_sub(s->light.position, vec3_mult_scalar(s->camera.up, cameraSpeed));
 
 	if (s->key_states[SDL_SCANCODE_LEFT])
-		yaw += 1.f;
+		s->camera.pitch += 0.02f;
 	if (s->key_states[SDL_SCANCODE_RIGHT])
-		yaw -= 1.f;
+		s->camera.pitch -= 0.02f;
 	if (s->key_states[SDL_SCANCODE_UP])
-		pitch += 1.f;
+		s->camera.yaw += 0.02f;
 	if (s->key_states[SDL_SCANCODE_DOWN])
-		pitch -= 1.f;
+		s->camera.yaw -= 0.02f;
 }
 
 void prepare_scene(t_scop *scop, char *filename, char *texture_filename)
@@ -154,8 +151,10 @@ void prepare_scene(t_scop *scop, char *filename, char *texture_filename)
 	if (!scop->skybox_size)
 		put_error("Invalid res/models/cube/newCube.obj skybox file.");
 	scop->cubemapObj = load_obj(&scop->timer, "res/models/cube/newCube.obj", scop->skybox_size, 1);
-	scop->model = mat4_translate(mat4_identity(), vec3_init(0.0f, 0.0f, 0.0f));
+	// scop->model = mat4_translate(vec3_init(0.0f, 0.0f, 0.0f));
 	scop->model = mat4_rotate(scop->model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f));
+	scop->skybox_translate = mat4_translate(scop->camera.position);
+	scop->skybox_translate = mat4_rotate(scop->skybox_translate, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f));
 	scop->objectTextureID = bind_texture(texture_filename);
 	scop->skyboxTextureID = bind_cubemap();
 	set_int1(scop->cubemapObj.program, "cubemap", 0);

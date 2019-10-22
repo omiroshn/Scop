@@ -148,8 +148,15 @@ void	draw_skybox(t_scop *s, unsigned int size, unsigned int program)
 
 	// exit(0);
 
-	set_mat4(program, "projection", projection);
+
+	// t_mat4 rotate;
+	// t_mat4 view;
+
+	// rotate = mat4_euler_angle_xyz(s->camera.yaw,
+	// 	s->camera.pitch, s->camera.roll);
+	// view = mat4_crop_mat3(mat4_mul_mat4(rotate, s->skybox_translate));
 	set_mat4(program, "view", view);
+	set_mat4(program, "projection", projection);
 	glDepthFunc(GL_LEQUAL);
 	glDrawArrays(GL_TRIANGLES, 0, size);
 	glDepthFunc(GL_LESS);
@@ -158,16 +165,6 @@ void	draw_skybox(t_scop *s, unsigned int size, unsigned int program)
 
 void	draw_object(t_scop *s, unsigned int size, unsigned int program)
 {
-	// t_mat4 view;
-	// t_mat4 projection;
-
-	// view = mat4_look_at(s->camera.position,
-	// 	vec3_add(s->camera.position, s->camera.direction), s->camera.up);
-	// projection = mat4_projection(TORAD(45.0f),
-	// 	1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 1000.0f);
-	// if (!s->space_pressed)
-	// 	s->model = mat4_rotate(s->model,
-	// 		vec3_init(0.0f, 1.0f, 0.0f), s->timer.delta_time * TORAD(55.0f));
 	t_mat4 view;
 	t_mat4 projection;
 
@@ -175,13 +172,41 @@ void	draw_object(t_scop *s, unsigned int size, unsigned int program)
 		vec3_add(s->camera.position, s->camera.direction), s->camera.up);
 	projection = mat4_projection(TORAD(45.0f),
 		1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 1000.0f);
-
 	if (!s->space_pressed)
 		s->model = mat4_rotate(s->model,
 			vec3_init(0.0f, 1.0f, 0.0f), s->timer.delta_time * TORAD(55.0f));
-	set_mat4(program, "projection", projection);
-	set_mat4(program, "view", view);
+
+
+// <<<<<<< HEAD
+// 	view = mat4_look_at(s->camera.position,
+// 		vec3_add(s->camera.position, s->camera.direction), s->camera.up);
+// 	projection = mat4_projection(TORAD(45.0f),
+// 		1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 1000.0f);
+
+// =======
+// 	translate = mat4_translate(s->camera.position);
+// 	// print_mat4(translate);
+// 	rotate = mat4_euler_angle_xyz(s->camera.yaw, s->camera.pitch, s->camera.roll);
+// 	// print_mat4(rotate);
+// 	view = mat4_mul_mat4(translate, rotate);
+// 	view.m11 = -view.m11;
+// 	view.m22 = -view.m22;
+// 	view.m43 = -view.m43;
+// 	print_mat4(view);
+// 	// view = mat4_look_at(s->camera.position,
+// 	// 	vec3_add(s->camera.position, s->camera.direction), s->camera.up);
+
+// 	// print_mat4(view);
+// 	// exit(0);
+// >>>>>>> 3fbbf9907a7e71582db11103f1c17a046833ed43
+	// if (!s->space_pressed)
+	// {
+	// 	s->model = mat4_rotate(s->model,
+	// 		vec3_init(0.0f, 1.0f, 0.0f), s->timer.delta_time * TORAD(55.0f));
+	// }
 	set_mat4(program, "model", s->model);
+	set_mat4(program, "view", view);
+	set_mat4(program, "projection", projection);
 	set_vec3(program, "lightPos", s->light.position);
 	set_int1(program, "mode", s->mode);
 	if (s->primitive_mode)
