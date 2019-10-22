@@ -44,25 +44,51 @@ void handle_events(t_scop *s)
 		else if (e.type == SDL_KEYUP)
 			s->key_states[e.key.keysym.scancode] = 0;
 		else if (e.type == SDL_MOUSEMOTION)
-			if (e.motion.state & SDL_BUTTON_LMASK)
-			{
-				if (e.motion.xrel > 0)
-					yaw -= 1.0f;
-				else if (e.motion.xrel < 0)
-					yaw += 1.0f;
-				if (e.motion.yrel > 0)
-					pitch -= 1.0f;
-				else if (e.motion.yrel < 0)
-					pitch += 1.0f;
+		{
+			// if (e.motion.state & SDL_BUTTON_LMASK)
+			// {
+			// 	if (e.motion.xrel > 0)
+			// 		yaw -= 1.0f;
+			// 	else if (e.motion.xrel < 0)
+			// 		yaw += 1.0f;
+			// 	if (e.motion.yrel > 0)
+			// 		pitch -= 1.0f;
+			// 	else if (e.motion.yrel < 0)
+			// 		pitch += 1.0f;
 
-				t_vec3 front;
-				front.x = -cos(TORAD(pitch)) * sin(TORAD(-yaw));
-				front.y = sin(TORAD(-pitch));
-				front.z = -cos(TORAD(pitch)) * cos(TORAD(-yaw));
-				s->camera.direction = vec3_normalize(front);
-				s->camera.right = vec3_normalize(vec3_cross(s->camera.direction, vec3_init(0.0f, -1.0f, 0.0f)));
-				s->camera.up = vec3_normalize(vec3_cross(s->camera.right, s->camera.direction));
-			}
+			// 	t_vec3 front;
+			// 	front.x = -cos(TORAD(pitch)) * sin(TORAD(-yaw));
+			// 	front.y = sin(TORAD(-pitch));
+			// 	front.z = -cos(TORAD(pitch)) * cos(TORAD(-yaw));
+			// 	s->camera.direction = vec3_normalize(front);
+			// 	s->camera.right = vec3_normalize(vec3_cross(s->camera.direction, vec3_init(0.0f, -1.0f, 0.0f)));
+			// 	s->camera.up = vec3_normalize(vec3_cross(s->camera.right, s->camera.direction));
+			// }
+
+			//-e.motion.xrel
+			t_vec3 up = vec3_init(s->camera.up.x, s->camera.up.y, s->camera.up.z);
+			t_vec3 right = vec3_init(s->camera.right.x, s->camera.right.y, s->camera.right.z);
+			t_quaternion q = init_quat(up, -e.motion.xrel * s->timer.delta_time * 50);
+			t_quaternion r = init_quat(right, -e.motion.yrel * s->timer.delta_time * 50);
+			t_quaternion su = quat_mult_quat(q,r);
+			
+			t_vec3 dir = vec3_init(s->camera.direction.x, s->camera.direction.y, s->camera.direction.z);
+			dir = quat_transform_vec3(su, dir);
+			s->camera.direction.x = dir.x;
+			s->camera.direction.y = dir.y;
+			s->camera.direction.z = dir.z;
+			
+			right = vec3_cross(dir, up);
+			s->camera.right.x = right.x;
+			s->camera.right.y = right.y;
+			s->camera.right.z = right.z;
+
+			up = vec3_cross(right, dir);
+			s->camera.up.x = up.x;
+			s->camera.up.y = up.y;
+			s->camera.up.z = up.z;
+
+		}
 	}
 
 	float cameraSpeed = s->timer.delta_time * 5.f;
@@ -95,18 +121,18 @@ void handle_events(t_scop *s)
 	// if (s->key_states[SDL_SCANCODE_O])
 	// 	s->light.position -= s->camera.up * cameraSpeed;
 
-	if (s->key_states[SDL_SCANCODE_I])
-		s->light.position = vec3_add(s->light.position, vec3_mult_scalar(s->camera.direction, cameraSpeed));
-	if (s->key_states[SDL_SCANCODE_K])
-		s->light.position = vec3_sub(s->light.position, vec3_mult_scalar(s->camera.direction, cameraSpeed));
-	if (s->key_states[SDL_SCANCODE_L])
-		s->light.position = vec3_add(s->light.position, vec3_mult_scalar(s->camera.right, cameraSpeed));
-	if (s->key_states[SDL_SCANCODE_J])
-		s->light.position = vec3_sub(s->light.position, vec3_mult_scalar(s->camera.right, cameraSpeed));
-	if (s->key_states[SDL_SCANCODE_U])
-		s->light.position = vec3_add(s->light.position, vec3_mult_scalar(s->camera.up, cameraSpeed));
-	if (s->key_states[SDL_SCANCODE_O])
-		s->light.position = vec3_sub(s->light.position, vec3_mult_scalar(s->camera.up, cameraSpeed));
+	// if (s->key_states[SDL_SCANCODE_I])
+	// 	s->light.position = vec3_add(s->light.position, vec3_mult_scalar(s->camera.direction, cameraSpeed));
+	// if (s->key_states[SDL_SCANCODE_K])
+	// 	s->light.position = vec3_sub(s->light.position, vec3_mult_scalar(s->camera.direction, cameraSpeed));
+	// if (s->key_states[SDL_SCANCODE_L])
+	// 	s->light.position = vec3_add(s->light.position, vec3_mult_scalar(s->camera.right, cameraSpeed));
+	// if (s->key_states[SDL_SCANCODE_J])
+	// 	s->light.position = vec3_sub(s->light.position, vec3_mult_scalar(s->camera.right, cameraSpeed));
+	// if (s->key_states[SDL_SCANCODE_U])
+	// 	s->light.position = vec3_add(s->light.position, vec3_mult_scalar(s->camera.up, cameraSpeed));
+	// if (s->key_states[SDL_SCANCODE_O])
+	// 	s->light.position = vec3_sub(s->light.position, vec3_mult_scalar(s->camera.up, cameraSpeed));
 
 	if (s->key_states[SDL_SCANCODE_LEFT])
 		yaw += 1.f;
@@ -173,13 +199,13 @@ int main(int argc, char **argv)
 		glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
 		draw_skybox(&scop, scop.skybox_size, scop.cubemapObj.program);
 		
-		// glEnable(GL_DEPTH_TEST);
-		// glBindVertexArray(scop.bindedObj.vao);
-		// glActiveTexture(GL_TEXTURE0);
-		// glBindTexture(GL_TEXTURE_2D, scop.objectTextureID);
-		// glActiveTexture(GL_TEXTURE0 + 1);
-		// glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
-		// draw_object(&scop, scop.obj_size, scop.bindedObj.program);
+		glEnable(GL_DEPTH_TEST);
+		glBindVertexArray(scop.bindedObj.vao);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, scop.objectTextureID);
+		glActiveTexture(GL_TEXTURE0 + 1);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
+		draw_object(&scop, scop.obj_size, scop.bindedObj.program);
 		SDL_GL_SwapWindow(window);
 	}
 	argc++;

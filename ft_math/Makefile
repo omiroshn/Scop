@@ -18,7 +18,7 @@ CC = /usr/bin/clang
 FILES = vec4_init vec4_geometry \
 		vec3_init vec3_geometry vec3_math \
 		vec2_init mat4_init mat4_mvp \
-		quaternion_init quaternion_math
+		quaternion_init
 
 SRC = $(addprefix obj/, $(addsuffix .c, $(FILES)))
 OBJ = $(addprefix obj/, $(addsuffix .o, $(FILES)))

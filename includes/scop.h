@@ -34,6 +34,10 @@
 # define SCREEN_HEIGHT 540.f
 # define KOEF(x) (x + 1.2f) / 2.4f
 
+
+void print_vec3(t_vec3 vec);
+void print_mat4(t_mat4 mat);
+
 typedef struct		s_binded
 {
 	unsigned int	vao;
