@@ -25,6 +25,8 @@ typedef	struct	s_list
 	struct s_list	*next;
 }				t_list;
 
+int				ft_chrcnt(char *line, char c);
+int				ft_array_length(char const *s, char c);
 void			*ft_memset(void *b, int c, size_t len);
 void			ft_bzero(void *s, size_t n);
 int				ft_countwords(char *str, char sep);

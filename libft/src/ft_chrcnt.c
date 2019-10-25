@@ -1,25 +1,28 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strclen.c                                       :+:      :+:    :+:   */
+/*   ft_chrcnt.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: omiroshn <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/10/25 18:51:32 by omiroshn          #+#    #+#             */
-/*   Updated: 2019/10/25 18:51:33 by omiroshn         ###   ########.fr       */
+/*   Created: 2019/10/25 18:47:30 by omiroshn          #+#    #+#             */
+/*   Updated: 2019/10/25 18:47:32 by omiroshn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-int		ft_strclen(const char *str, char c)
+int		ft_chrcnt(char *line, char c)
 {
-	char *s;
+	int i;
+	int cnt;
 
-	if (!str)
-		return (0);
-	s = (char*)str;
-	while (*s && *s != c)
-		++s;
-	return ((int)(s - str));
+	cnt = 0;
+	i = -1;
+	while (line[++i])
+	{
+		if (line[i] == c)
+			cnt++;
+	}
+	return (cnt);
 }

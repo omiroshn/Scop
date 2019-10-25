@@ -1,25 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strclen.c                                       :+:      :+:    :+:   */
+/*   ft_array_length.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: omiroshn <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/10/25 18:51:32 by omiroshn          #+#    #+#             */
-/*   Updated: 2019/10/25 18:51:33 by omiroshn         ###   ########.fr       */
+/*   Created: 2019/10/25 18:47:41 by omiroshn          #+#    #+#             */
+/*   Updated: 2019/10/25 18:47:42 by omiroshn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-int		ft_strclen(const char *str, char c)
+int		ft_array_length(char const *s, char c)
 {
-	char *s;
+	unsigned int len;
 
-	if (!str)
-		return (0);
-	s = (char*)str;
-	while (*s && *s != c)
-		++s;
-	return ((int)(s - str));
+	len = 0;
+	while (*s)
+	{
+		if (*s == c)
+			++s;
+		else
+		{
+			++len;
+			while (*s && *s != c)
+				++s;
+		}
+	}
+	return (len);
 }
