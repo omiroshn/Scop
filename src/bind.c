@@ -96,15 +96,16 @@ t_binded		set_up_object(t_vertex *vertices, int size)
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, size * sizeof(t_vertex),
 			&vertices[0], GL_STATIC_DRAW);
+	free(vertices);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE,
-			sizeof(t_vertex), (void*)get_offset(t_vertex, position));
+			sizeof(t_vertex), (void*)GET_OFFSET(t_vertex, position));
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-			sizeof(t_vertex), (void*)get_offset(t_vertex, normal));
+			sizeof(t_vertex), (void*)GET_OFFSET(t_vertex, normal));
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
-			sizeof(t_vertex), (void*)get_offset(t_vertex, tex_coords));
+			sizeof(t_vertex), (void*)GET_OFFSET(t_vertex, tex_coords));
 	program = read_shaders(
 		"res/shaders/vertex_shader.glsl",
 		"res/shaders/fragment_shader.glsl");
@@ -123,9 +124,10 @@ t_binded		set_up_skybox(t_vertex *vertices, int size)
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, size * sizeof(t_vertex),
 			&vertices[0], GL_STATIC_DRAW);
+	free(vertices);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE,
-			sizeof(t_vertex), (void*)get_offset(t_vertex, position));
+			sizeof(t_vertex), (void*)GET_OFFSET(t_vertex, position));
 	program = read_shaders(
 		"res/shaders/skybox.vt.glsl",
 		"res/shaders/skybox.fg.glsl");

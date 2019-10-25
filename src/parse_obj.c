@@ -12,66 +12,28 @@
 
 #include "scop.h"
 
-static int	ft_array_length(char const *s, char c)
-{
-	unsigned int len;
-
-	len = 0;
-	while (*s)
-	{
-		if (*s == c)
-			++s;
-		else
-		{
-			++len;
-			while (*s && *s != c)
-				++s;
-		}
-	}
-	return (len);
-}
-
-static int	ft_chrcnt(char *line, char c)
-{
-	int i;
-	int cnt;
-
-	cnt = 0;
-	i = -1;
-	while (line[++i])
-	{
-		if (line[i] == c)
-			cnt++;
-	}
-	return (cnt);
-}
-
 void		parse(t_tmp_vertex *v, char *line, int index)
 {
-	char	**sub;
-	int		slashes;
-	int		len;
-
-	slashes = ft_chrcnt(line, '/');
-	if (slashes)
+	v->slashes = ft_chrcnt(line, '/');
+	if (v->slashes)
 	{
-		len = ft_array_length(line, '/');
-		if (len == 0 || len == 1)
+		v->len = ft_array_length(line, '/');
+		if (v->len == 0 || v->len == 1)
 			v->vertex_indices[index] = 0;
 		else
 		{
-			sub = ft_strsplit(line, '/');
-			v->vertex_indices[index] = sub[0] ? atoi(sub[0]) : 0;
-			if (slashes == 1 || len == 3)
-				v->uv_indices[index] = sub[1] ? atoi(sub[1]) : 0;
-			if (slashes == 2 || len == 2)
+			v->sub = ft_strsplit(line, '/');
+			v->vertex_indices[index] = v->sub[0] ? atoi(v->sub[0]) : 0;
+			if (v->slashes == 1 || v->len == 3)
+				v->uv_indices[index] = v->sub[1] ? atoi(v->sub[1]) : 0;
+			if (v->slashes == 2 || v->len == 2)
 			{
-				if (len == 2)
-					v->normal_indices[index] = sub[1] ? atoi(sub[1]) : 0;
+				if (v->len == 2)
+					v->normal_indices[index] = v->sub[1] ? atoi(v->sub[1]) : 0;
 				else
-					v->normal_indices[index] = sub[2] ? atoi(sub[2]) : 0;
+					v->normal_indices[index] = v->sub[2] ? atoi(v->sub[2]) : 0;
 			}
-			free_strsplit(sub);
+			free_strsplit(v->sub);
 		}
 	}
 	else
@@ -125,6 +87,5 @@ int			get_size_of_obj(char *filename)
 	close(fd);
 	if (f_chars < 10)
 		put_error("Invalid obj file.");
-	ft_printf("faces_count: %d\n", faces);
 	return (faces);
 }

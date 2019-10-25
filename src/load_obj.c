@@ -12,8 +12,9 @@
 
 #include "scop.h"
 
-void		init_temp_struct(t_tmp_vertex *v, int size)
+static void	init_temp_struct(t_tmp_vertex *v, char *filename, int size)
 {
+	printf("Size of %s: %d\n", filename, size);
 	v->vertex = ft_memalloc(sizeof(t_vec4) * size);
 	v->uv = ft_memalloc(sizeof(t_vec2) * size);
 	v->normal = ft_memalloc(sizeof(t_vec3) * size);
@@ -24,9 +25,11 @@ void		init_temp_struct(t_tmp_vertex *v, int size)
 	v->texture_count = 0;
 	v->normal_count = 0;
 	v->faces_count = 0;
+	v->slashes = 0;
+	v->len = 0;
 }
 
-void		free_tmp_struct(t_tmp_vertex *v)
+static void	free_tmp_struct(t_tmp_vertex *v)
 {
 	free(v->vertex);
 	free(v->uv);
@@ -73,8 +76,7 @@ t_binded	load_obj(t_timer *timer, char *filename, int size, short skybox)
 	t_vertex		*verti;
 
 	fd = open(filename, O_RDONLY);
-	printf("SIZE: %d\n", size);
-	init_temp_struct(&v, size);
+	init_temp_struct(&v, filename, size);
 	while (get_next_line(fd, &line))
 	{
 		if (!(ft_strncmp(line, "v ", 2)))

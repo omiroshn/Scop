@@ -15,13 +15,10 @@
 void	draw_skybox(t_scop *s, unsigned int size, unsigned int program)
 {
 	t_mat4 view;
-	t_mat4 projection;
 
 	view = mat4_crop_mat3(mat4_look_at(s->camera.position,
 		vec3_add(s->camera.position, s->camera.direction), s->camera.up));
-	projection = mat4_projection(TORAD(45.0f),
-		1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
-	set_mat4(program, "projection", projection);
+	set_mat4(program, "projection", s->projection);
 	set_mat4(program, "view", view);
 	glDepthFunc(GL_LEQUAL);
 	glDrawArrays(GL_TRIANGLES, 0, size);
@@ -32,19 +29,16 @@ void	draw_skybox(t_scop *s, unsigned int size, unsigned int program)
 void	draw_object(t_scop *s, unsigned int size, unsigned int program)
 {
 	t_mat4 view;
-	t_mat4 projection;
 
 	view = mat4_look_at(s->camera.position,
 		vec3_add(s->camera.position, s->camera.direction), s->camera.up);
-	projection = mat4_projection(TORAD(45.0f),
-		1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 1000.0f);
 	if (!s->space_pressed)
-		s->model = mat4_rotate(s->model,
-			vec3_init(0.0f, 1.0f, 0.0f), s->timer.delta_time * TORAD(55.0f));
-	set_mat4(program, "projection", projection);
+		s->model = mat4_rotate(s->model, vec3_init(0.0f, 1.0f, 0.0f),
+			s->timer.delta_time * TORAD(55.0f));
+	set_mat4(program, "projection", s->projection);
 	set_mat4(program, "view", view);
 	set_mat4(program, "model", s->model);
-	set_vec3(program, "lightPos", s->light.position);
+	set_vec3(program, "lightPos", s->light_pos);
 	set_int1(program, "mode", s->mode);
 	if (s->primitive_mode)
 		glDrawArrays(GL_TRIANGLES, 0, size);

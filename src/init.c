@@ -12,7 +12,7 @@
 
 #include "scop.h"
 
-void		init_glew(SDL_Window *window)
+SDL_GLContext	init_glew(SDL_Window *window)
 {
 	SDL_GLContext	context;
 	GLenum			err;
@@ -23,9 +23,10 @@ void		init_glew(SDL_Window *window)
 	if (err != GLEW_OK)
 		put_error((const char *)glewGetErrorString(err));
 	ft_printf("Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+	return (context);
 }
 
-SDL_Window	*init_window(void)
+SDL_Window		*init_window(void)
 {
 	SDL_Window *window;
 
@@ -34,7 +35,7 @@ SDL_Window	*init_window(void)
 	window = SDL_CreateWindow("SCOP",
 		SDL_WINDOWPOS_CENTERED,
 		SDL_WINDOWPOS_CENTERED,
-		960, 540, SDL_WINDOW_OPENGL);
+		SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
 	if (!window)
 		put_error("Unable to create SDL window.");
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -48,7 +49,7 @@ SDL_Window	*init_window(void)
 	return (window);
 }
 
-void		init_keys(short *key_states)
+void			init_keys(short *key_states)
 {
 	int i;
 
@@ -57,13 +58,19 @@ void		init_keys(short *key_states)
 		key_states[i] = 0;
 }
 
-void		init_scop(t_scop *scop)
+void			init_scop(t_scop *scop)
 {
 	scop->camera.position = vec3_init(0.0f, -4.0f, 15.0f);
 	scop->camera.direction = vec3_init(0.0f, 0.0f, -1.0f);
 	scop->camera.right = vec3_init(-1.0f, 0.0f, 0.0f);
 	scop->camera.up = vec3_init(0.0f, -1.0f, 0.0f);
-	scop->light.position = vec3_init(0.0f, -10.0f, 0.0f);
+	scop->camera.yaw = 0.0f;
+	scop->light_pos = vec3_init(0.0f, -10.0f, 0.0f);
+	scop->model = mat4_translate(mat4_identity(), vec3_init(0.0f, 0.0f, 0.0f));
+	scop->model = mat4_rotate(scop->model,
+					vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f));
+	scop->projection = mat4_projection(TORAD(45.0f),
+		1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
 	scop->program_is_running = 1;
 	scop->space_pressed = 1;
 	scop->primitive_mode = 1;
