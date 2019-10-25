@@ -18,10 +18,10 @@ void	prepare_scene(t_scop *scop, char *filename, char *texture_filename)
 	if (!scop->obj_size)
 		put_error("Invalid obj file.");
 	scop->binded_obj = load_obj(&scop->timer, filename, scop->obj_size, 0);
-	scop->skybox_size = get_size_of_obj("res/models/cube/newCube.obj");
+	scop->skybox_size = get_size_of_obj("res/models/cube/cubemap.obj");
 	if (!scop->skybox_size)
-		put_error("Invalid res/models/cube/newCube.obj skybox file.");
-	scop->cubemap_obj = load_obj(&scop->timer, "res/models/cube/newCube.obj",
+		put_error("Invalid res/models/cube/cubemap.obj skybox file.");
+	scop->cubemap_obj = load_obj(&scop->timer, "res/models/cube/cubemap.obj",
 		scop->skybox_size, 1);
 	scop->object_texture_id = bind_texture(texture_filename);
 	scop->skybox_texture_id = bind_cubemap();

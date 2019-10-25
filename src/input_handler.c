@@ -82,12 +82,7 @@ void		handle_events(t_scop *s)
 			s->key_states[e.key.keysym.scancode] = 0;
 		else if (e.type == SDL_MOUSEMOTION)
 			if (e.motion.state & SDL_BUTTON_LMASK)
-			{
-				if (e.motion.xrel > 0)
-					s->camera.yaw -= 1.0f;
-				else if (e.motion.xrel < 0)
-					s->camera.yaw += 1.0f;
-			}
+				s->camera.yaw += e.motion.xrel / 10.f;
 	}
 	handle_keys(s);
 	update_direction(s);
