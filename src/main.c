@@ -41,6 +41,7 @@ void handle_events(t_scop *s)
 		else if (e.type == SDL_KEYUP)
 			s->key_states[e.key.keysym.scancode] = 0;
 		else if (e.type == SDL_MOUSEMOTION)
+// <<<<<<< HEAD
 		{
 			// if (e.motion.state & SDL_BUTTON_LMASK)
 			// {
@@ -86,6 +87,27 @@ void handle_events(t_scop *s)
 			s->camera.up.z = up.z;
 
 		}
+// =======
+// 			if (e.motion.state & SDL_BUTTON_LMASK)
+// 			{
+// 				if (e.motion.xrel > 0)
+// 					s->camera.pitch += 0.02f;
+// 				else if (e.motion.xrel < 0)
+// 					s->camera.pitch -= 0.02f;
+// 				if (e.motion.yrel > 0)
+// 					s->camera.yaw += 0.02f;
+// 				else if (e.motion.yrel < 0)
+// 					s->camera.yaw -= 0.02f;
+
+// 				t_vec3 front;
+// 				front.x = -cos(TORAD(s->camera.pitch)) * sin(TORAD(-s->camera.yaw));
+// 				front.y = sin(TORAD(-s->camera.pitch));
+// 				front.z = -cos(TORAD(s->camera.pitch)) * cos(TORAD(-s->camera.yaw));
+// 				s->camera.direction = vec3_normalize(front);
+// 				s->camera.right = vec3_normalize(vec3_cross(s->camera.direction, vec3_init(0.0f, -1.0f, 0.0f)));
+// 				s->camera.up = vec3_normalize(vec3_cross(s->camera.right, s->camera.direction));
+// 			}
+// >>>>>>> 3fbbf9907a7e71582db11103f1c17a046833ed43
 	}
 
 	float cameraSpeed = s->timer.delta_time * 5.f;
@@ -151,7 +173,7 @@ void prepare_scene(t_scop *scop, char *filename, char *texture_filename)
 	if (!scop->skybox_size)
 		put_error("Invalid res/models/cube/newCube.obj skybox file.");
 	scop->cubemapObj = load_obj(&scop->timer, "res/models/cube/newCube.obj", scop->skybox_size, 1);
-	// scop->model = mat4_translate(vec3_init(0.0f, 0.0f, 0.0f));
+	scop->model = mat4_translate(vec3_init(0.0f, 0.0f, 0.0f));
 	scop->model = mat4_rotate(scop->model, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f));
 	scop->skybox_translate = mat4_translate(scop->camera.position);
 	scop->skybox_translate = mat4_rotate(scop->skybox_translate, vec3_init(0.0f, 0.0f, 1.0f), TORAD(180.0f));
@@ -192,11 +214,11 @@ int main(int argc, char **argv)
 
 		//как сделать, чтобы скайбокс не перерисовывал обьект
 
-		glDisable(GL_DEPTH_TEST);
-		glBindVertexArray(scop.cubemapObj.vao);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
-		draw_skybox(&scop, scop.skybox_size, scop.cubemapObj.program);
+		// glDisable(GL_DEPTH_TEST);
+		// glBindVertexArray(scop.cubemapObj.vao);
+		// glActiveTexture(GL_TEXTURE0);
+		// glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
+		// draw_skybox(&scop, scop.skybox_size, scop.cubemapObj.program);
 		
 		glEnable(GL_DEPTH_TEST);
 		glBindVertexArray(scop.bindedObj.vao);
