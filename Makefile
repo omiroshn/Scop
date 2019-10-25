@@ -1,6 +1,6 @@
 NAME = scop
 
-# FLAGS = -Wall -Wextra -Werror
+FLAGS = -Wall -Wextra -Werror
 
 CC = /usr/bin/clang
 FILES = main \
@@ -22,30 +22,20 @@ MATH_DIR = ft_math/
 SRC = $(addprefix src/, $(addsuffix .c, $(FILES)))
 OBJECTS = $(addprefix obj/, $(addsuffix .o, $(FILES)))
 
-WHOAMI = $(shell whoami)
+LIB_PATH = ~/.brew/lib/
+INCLUDE_PATH = ~/.brew/include/
 
-ifeq ($(WHOAMI), omiroshn)
-	LOCAL_PATH = ~/.brew/Cellar/
-else
-	LOCAL_PATH = /usr/local/Cellar/
-endif
+INCLUDES  = -I $(INCLUDE_PATH)
+INCLUDES += -I includes
+INCLUDES += -I libft/includes
+INCLUDES += -I libft/ft_printf/includes
+INCLUDES += -I ft_math/inc
 
-PATH_GLEW = $(LOCAL_PATH)glew/2.1.0/
-PATH_SDL = $(LOCAL_PATH)sdl2/2.0.10/
+LIBS  = -L $(LIB_PATH)
+LIBS += $(LIBFT_DIR)libft.a
+LIBS += $(MATH_DIR)ft_math.a
 
-INCLUDES = -I $(PATH_GLEW)include \
-	-I $(PATH_SDL)include \
-	-I includes \
-	-I libft/includes \
-	-I libft/ft_printf/includes \
-	-I ft_math/inc
-
-LIBS = -L $(PATH_GLEW)lib \
-	-L $(PATH_SDL)lib \
-	$(LIBFT_DIR)libft.a \
-	$(MATH_DIR)ft_math.a
-
-FRAMEWORKS = -lglew -framework OpenGL -lsdl2
+FRAMEWORKS = -framework OpenGL -lglew -lsdl2
 
 all: $(NAME)	
 
