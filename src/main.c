@@ -214,11 +214,11 @@ int main(int argc, char **argv)
 
 		//как сделать, чтобы скайбокс не перерисовывал обьект
 
-		// glDisable(GL_DEPTH_TEST);
-		// glBindVertexArray(scop.cubemapObj.vao);
-		// glActiveTexture(GL_TEXTURE0);
-		// glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
-		// draw_skybox(&scop, scop.skybox_size, scop.cubemapObj.program);
+		glDisable(GL_DEPTH_TEST);
+		glBindVertexArray(scop.cubemapObj.vao);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, scop.skyboxTextureID);
+		draw_skybox(&scop, scop.skybox_size, scop.cubemapObj.program);
 		
 		glEnable(GL_DEPTH_TEST);
 		glBindVertexArray(scop.bindedObj.vao);
